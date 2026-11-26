@@ -2183,7 +2183,8 @@
       }
       visibleSprites.sort((a, b) => b.dist - a.dist); // Painter's algorithm: far to near
 
-      // 4) Draw Each 3D Billboard Clipped Against Wall Z-Buffer!
+      // 4) Draw Each 3D Billboard Clipped Against Wall Z-Buffer (labels drawn unclipped after!)
+      const fpLabels = [];
       for (const s of visibleSprites) {
         const scale = Math.min(3.4, (1.45 * projPlane) / (s.dist * 10.5));
         const halfW = Math.max(18, 42 * scale);
@@ -2219,7 +2220,7 @@
           ctx.restore();
           const near = !c.calmed && s.dist < 110;
           const lbl = c.calmed ? `${c.name} ✓` : (near ? `💬 [E / SPACE] Talk to ${c.name}` : `${c.name}: ${c.yell}`);
-          drawFPLabel(s.screenX, floorY - 76 * scale, lbl, c.calmed ? '#86efac' : (near ? '#7dd3fc' : '#f0abfc'));
+          fpLabels.push({ x: s.screenX, y: floorY - 78 * scale, text: lbl, color: c.calmed ? '#86efac' : (near ? '#7dd3fc' : '#f0abfc') });
         } else if (s.type === 'enemy') {
           const g = s.item;
           ctx.save();
@@ -2237,7 +2238,7 @@
           });
           ctx.restore();
           const msg = (g.speechTimer > 0 && g.speech) ? g.speech : g.name;
-          drawFPLabel(s.screenX, floorY - 74 * scale, msg, '#fca5a5');
+          fpLabels.push({ x: s.screenX, y: floorY - 74 * scale, text: msg, color: '#fca5a5' });
         } else if (s.type === 'ppe') {
           const p = s.item;
           const bob = Math.sin(elapsed * 5 + p.x) * 6 * scale;
@@ -2250,7 +2251,7 @@
           ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(p.kind === 'suit' ? '🥼' : p.kind === 'mask' ? '😷' : '🧤', 0, 0);
           ctx.restore();
-          drawFPLabel(s.screenX, floorY - 50 * scale + bob, p.label, '#7dd3fc');
+          fpLabels.push({ x: s.screenX, y: floorY - 52 * scale + bob, text: p.label, color: '#7dd3fc' });
         } else if (s.type === 'osha') {
           const o = s.item;
           ctx.save();
@@ -2262,8 +2263,7 @@
           ctx.fillStyle = '#090514'; ctx.font = `900 ${Math.round(18 * scale)}px sans-serif`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 3 * scale);
           ctx.restore();
-          drawFPLabel(s.screenX, floorY - 48 * scale, 'OSHA: ' + o.label, '#fde047');
-          if (o.progress > 0) drawProgressBar(s.screenX, floorY - 62 * scale, o.progress / o.hp, '#facc15');
+          fpLabels.push({ x: s.screenX, y: floorY - 50 * scale, text: 'OSHA: ' + o.label, color: '#fde047', prog: o.progress > 0 ? o.progress / o.hp : 0, progCol: '#facc15' });
         } else if (s.type === 'tool') {
           const t = s.item;
           const bob = Math.sin(elapsed * 5 + t.x) * 6 * scale;
@@ -2276,7 +2276,7 @@
           ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(t.icon, 0, 0);
           ctx.restore();
-          drawFPLabel(s.screenX, floorY - 48 * scale + bob, '🧰 ' + t.label, '#fdba74');
+          fpLabels.push({ x: s.screenX, y: floorY - 50 * scale + bob, text: '🧰 ' + t.label, color: '#fdba74' });
         } else if (s.type === 'dumpster') {
           ctx.save();
           ctx.translate(s.screenX, floorY - 22 * scale);
@@ -2286,7 +2286,7 @@
           ctx.fillStyle = '#facc15'; ctx.font = `900 ${Math.round(10 * scale)}px sans-serif`;
           ctx.textAlign = 'center'; ctx.fillText('BIO-ONE', 0, 8 * scale);
           ctx.restore();
-          drawFPLabel(s.screenX, floorY - 52 * scale, player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', '#86efac');
+          fpLabels.push({ x: s.screenX, y: floorY - 54 * scale, text: player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', color: '#86efac' });
         } else if (s.type === 'hazard') {
           const h = s.item;
           ctx.save();
@@ -2310,10 +2310,20 @@
           }
           ctx.restore();
           const tTag = h.reqTool ? ` [${TOOL_META[h.reqTool].icon}${h.haul ? '→🗑️' : ''}]` : '';
-          drawFPLabel(s.screenX, floorY - 40 * scale, h.label + tTag, (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc');
-          if (h.progress > 0) drawProgressBar(s.screenX, floorY - 54 * scale, h.progress / h.hp, '#22c55e');
+          fpLabels.push({
+            x: s.screenX, y: floorY - 42 * scale,
+            text: h.label + tTag,
+            color: (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc',
+            prog: h.progress > 0 ? h.progress / h.hp : 0, progCol: '#22c55e'
+          });
         }
         ctx.restore();
+      }
+
+      // Draw all 3D labels unclipped with generous padding!
+      for (const lb of fpLabels) {
+        drawFPLabel(lb.x, lb.y, lb.text, lb.color);
+        if (lb.prog > 0) drawProgressBar(lb.x, lb.y - 20, lb.prog, lb.progCol);
       }
 
       // 5) First-Person Hands, Decon Sprayer, Crosshair & Floating Notifications
@@ -2330,14 +2340,18 @@
     }
 
     function drawFPLabel(x, y, text, color) {
-      if (y < 24 || y > VH - 20) return;
-      ctx.font = '800 11.5px sans-serif';
+      const clampedY = Math.max(46, Math.min(VH - 44, y));
+      ctx.save();
+      ctx.font = '800 12px -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const tw = ctx.measureText(text).width + 14;
-      ctx.fillStyle = 'rgba(9, 5, 20, 0.84)';
-      roundRect(x - tw / 2, y - 10, tw, 20, 7); ctx.fill();
+      const tw = Math.ceil(ctx.measureText(text).width) + 22;
+      const clampedX = Math.max(tw / 2 + 8, Math.min(VW - tw / 2 - 8, x));
+      ctx.fillStyle = 'rgba(9, 5, 20, 0.9)';
+      roundRect(clampedX - tw / 2, clampedY - 12, tw, 24, 8); ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.4; ctx.stroke();
       ctx.fillStyle = color;
-      ctx.fillText(text, x, y);
+      ctx.fillText(text, clampedX, clampedY);
+      ctx.restore();
     }
 
     function drawFPHands() {
