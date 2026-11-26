@@ -394,11 +394,21 @@
       hank: 'assets/hank.png',
       inspector: 'assets/inspector.png',
       raccoon: 'assets/raccoon.png',
+      dave: 'assets/dave.png',
+      karen: 'assets/karen.png',
+      ricky: 'assets/ricky.png',
+      gladys: 'assets/gladys.png',
+      carl: 'assets/carl.png',
+      chad: 'assets/chad.png',
+      roach: 'assets/roach.png',
+      cat: 'assets/cat.png',
+      roomba: 'assets/roomba.png',
     };
+    const SPRITE_VERSION = 'cast-1';
     const SPRITES = {};
     for (const [k, url] of Object.entries(SPRITE_URLS)) {
       const img = new Image();
-      img.src = url + '?v=3';
+      img.src = `${url}?v=${SPRITE_VERSION}`;
       SPRITES[k] = img;
     }
 
@@ -408,10 +418,13 @@
     }
 
     function getClientSpriteKey(name) {
-      if (name.includes('Dave')) return 'dave';
-      if (name.includes('Karen') || name.includes('Gladys')) return 'karen';
-      if (name.includes('Ricky') || name.includes('Carl')) return 'ricky';
-      return 'dave';
+      return ({
+        'Hoarder Dave': 'dave',
+        'HOA Karen': 'karen',
+        'Cousin Ricky': 'ricky',
+        'Aunt Gladys': 'gladys',
+        'Landlord Carl': 'carl',
+      })[name] || null;
     }
 
     // Build realistic 256x256 architectural wall texture (warm plaster + oak wainscoting + molding!)
@@ -868,7 +881,10 @@
       const sKey = getClientSpriteKey(c.name);
       const avEl = document.getElementById('dlg-avatar');
       if (spriteReady(sKey)) {
-        avEl.innerHTML = `<img src="${SPRITE_URLS[sKey]}?v=3" alt="${c.name}" style="width:100%;height:100%;object-fit:contain;" />`;
+        const portrait = spriteReady(sKey).cloneNode();
+        portrait.alt = c.name;
+        portrait.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+        avEl.replaceChildren(portrait);
       } else {
         avEl.textContent = c.avatar;
       }
@@ -1648,6 +1664,7 @@
 
 
     function drawRoomba(g) {
+      if (drawCastCritter(g, 'roomba', 23, 50, 14, 0)) return;
       ctx.save();
       ctx.translate(g.x, g.y);
       ctx.fillStyle = 'rgba(0,0,0,0.42)';
@@ -1717,7 +1734,25 @@
     }
 
 
+    function drawCastCritter(g, key, height, maxWidth, foot, bob) {
+      const art = spriteReady(key);
+      if (!art) return false;
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.ellipse(0, foot - 1, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(0, bob);
+      ctx.scale(g.facing || 1, 1);
+      const ratio = art.naturalWidth / art.naturalHeight;
+      const width = Math.min(height * ratio, maxWidth);
+      const actualHeight = width / ratio;
+      ctx.drawImage(art, -width / 2, foot - actualHeight, width, actualHeight);
+      ctx.restore();
+      return true;
+    }
+
     function drawCat(g) {
+      if (drawCastCritter(g, 'cat', 49, 56, 17, Math.abs(Math.sin(g.stepPhase * 1.4)) * -4)) return;
       ctx.save();
       ctx.translate(g.x, g.y);
       ctx.scale(g.facing || 1, 1);
