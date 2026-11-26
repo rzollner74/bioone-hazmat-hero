@@ -290,6 +290,7 @@
       <div class="stat-pill" id="hud-clients" style="border-color:rgba(232,121,249,0.5);color:#f0abfc;">😰 Clients: 0</div>
       <div class="stat-pill" style="color:#4ade80;" id="hud-score">💵 $0</div>
       <div class="stat-pill" id="hud-timer">⏱ 0:00</div>
+      <button class="stat-pill" id="btn-sound-toggle" type="button" style="cursor:pointer; border-color:rgba(147,197,253,0.45); background:rgba(255,255,255,0.08); color:#e2e8f0;">🔊 Sound</button>
       <button class="stat-pill" id="btn-view-toggle" type="button" style="cursor:pointer; border-color:rgba(0,240,255,0.65); background:rgba(0,240,255,0.16); color:#7dd3fc;">👁️ 3D FP</button>
     </div>
   </div>
@@ -450,7 +451,9 @@
 
     // ================= PROCEDURAL SFX =================
     let audioCtx = null;
+    let soundMuted = localStorage.getItem('hazmat_muted') === '1';
     function sfx(type) {
+      if (soundMuted) return;
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
@@ -2524,6 +2527,22 @@
       requestAnimationFrame(loop);
     }
 
+    function updateSoundBtn() {
+      const btn = document.getElementById('btn-sound-toggle');
+      if (!btn) return;
+      btn.textContent = soundMuted ? '🔇 Muted' : '🔊 Sound';
+      btn.style.borderColor = soundMuted ? 'rgba(239,68,68,0.55)' : 'rgba(147,197,253,0.45)';
+      btn.style.color = soundMuted ? '#fca5a5' : '#e2e8f0';
+    }
+    function toggleSound() {
+      soundMuted = !soundMuted;
+      localStorage.setItem('hazmat_muted', soundMuted ? '1' : '0');
+      updateSoundBtn();
+      if (!soundMuted) sfx('pickup');
+    }
+    document.getElementById('btn-sound-toggle').onclick = toggleSound;
+    updateSoundBtn();
+
     function toggleViewMode() {
       viewMode = viewMode === 'fp' ? 'top' : 'fp';
       document.getElementById('btn-view-toggle').textContent = viewMode === 'fp' ? '👁️ 3D FP' : '🗺️ 2D MAP';
@@ -2557,6 +2576,7 @@
         return;
       }
       if (e.code === 'KeyV' && !e.repeat) { toggleViewMode(); return; }
+      if (e.code === 'KeyM' && !e.repeat) { toggleSound(); return; }
       keys[e.code] = true;
     });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
