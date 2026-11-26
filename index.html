@@ -627,6 +627,7 @@
         inspectors: [
           { name: 'OSHA Gary', x: 960, y: 480, vx: -115, vy: 85 },
           { name: 'OSHA Brenda', x: 1520, y: 880, vx: 105, vy: -95 },
+          { name: 'Raccoon Dave', x: 1580, y: 460, vx: -120, vy: 95, isRaccoon: true },
           { name: 'Evil Roomba', x: 460, y: 460, vx: 130, vy: 110, isRoomba: true },
         ],
         clients: [
@@ -920,10 +921,11 @@
         if (Math.hypot(player.x - p.x, player.y - p.y) < 42) {
           p.taken = true;
           player[p.kind] = true;
-          score += 200;
+          const bonus = p.isSpare ? 50 : 200;
+          score += bonus;
           sfx('pickup');
           spawnParticles(p.x, p.y, '#38bdf8', 18);
-          addFloater(p.x, p.y - 20, `EQUIPPED ${p.label.toUpperCase()}! +$200`, '#7dd3fc');
+          addFloater(p.x, p.y - 20, `${p.isSpare ? 'RE-EQUIPPED' : 'EQUIPPED'} ${p.label.toUpperCase()}! +$${bonus}`, '#7dd3fc');
           if (ppeCount() === 3) addFloater(player.x, player.y - 44, 'FULL PPE! OSHA PROOF! 💪', '#4ade80');
         }
       }
@@ -998,8 +1000,40 @@
 
         if (Math.hypot(player.x - g.x, player.y - g.y) < 72 && fineCooldown <= 0) {
           if (g.isRaccoon) {
-            fineCooldown = 2.4; g.speech = 'HISS! MY TRASH!'; g.speechTimer = 1.8;
-            addFloater(g.x, g.y - 36, '🦝 Dave tried to steal your lunch!', '#fde047'); sfx('whistle');
+            fineCooldown = 2.6;
+            const worn = ['suit', 'mask', 'gloves'].filter((k) => player[k]);
+            if (worn.length > 0) {
+              const stolen = worn[Math.floor(Math.random() * worn.length)];
+              const meta = {
+                suit:   { label: 'Tyvek Suit',      quip: 'YOINK!! NICE TYVEK SUIT!' },
+                mask:   { label: 'P100 Respirator', quip: 'YOINK!! FREE RESPIRATOR!' },
+                gloves: { label: 'Nitrile Gloves',  quip: 'YOINK!! SHINY GLOVES!' }
+              }[stolen];
+              player[stolen] = false;
+              g.stolenLoot = stolen;
+              g.vx = -g.vx; g.vy = -g.vy;
+              g.speech = meta.quip; g.speechTimer = 2.4;
+              sfx('whistle');
+              spawnParticles(player.x, player.y, '#38bdf8', 16);
+              addFloater(player.x, player.y - 42, `🦝 DAVE STOLE YOUR ${meta.label.toUpperCase()}!`, '#fde047');
+              addFloater(player.x, player.y - 64, '🔵 Grab a new one on the minimap!', '#7dd3fc');
+              // Spawn a replacement PPE crate in another room away from Hank
+              const spots = [
+                { x: 500, y: 170 }, { x: 150, y: 490 },
+                { x: 780, y: 210 }, { x: 1150, y: 500 },
+                { x: 1480, y: 210 }, { x: 1740, y: 490 },
+                { x: 480, y: 800 }, { x: 170, y: 820 },
+                { x: 820, y: 820 }, { x: 1130, y: 1090 },
+                { x: 1460, y: 920 }, { x: 1720, y: 830 }
+              ];
+              const farSpots = spots.filter((s) => Math.hypot(s.x - player.x, s.y - player.y) > 420);
+              const pick = (farSpots.length ? farSpots : spots)[Math.floor(Math.random() * (farSpots.length || spots.length))];
+              ppeItems.push({ kind: stolen, label: 'Spare ' + meta.label, x: pick.x, y: pick.y, taken: false, isSpare: true });
+            } else {
+              g.speech = 'HISS! NO PPE TO STEAL!'; g.speechTimer = 1.8;
+              addFloater(g.x, g.y - 36, '🦝 Dave judged your Crocs!', '#fde047');
+              sfx('whistle');
+            }
           } else if (g.isRoomba) {
             fineCooldown = 2.2; g.speech = 'BEEP BOOP CHAOS!'; g.speechTimer = 1.6;
             spawnParticles(g.x, g.y, '#f97316', 12);
@@ -1390,6 +1424,10 @@
             ctx.beginPath(); ctx.arc(g.x, g.y, 19, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
             ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillText(g.isRaccoon ? '🦝' : '🤖', g.x, g.y);
+            if (g.isRaccoon && g.stolenLoot) {
+              ctx.font = '15px serif';
+              ctx.fillText(g.stolenLoot === 'suit' ? '🥼' : g.stolenLoot === 'mask' ? '😷' : '🧤', g.x + 17, g.y - 14);
+            }
             ctx.restore();
           } else {
             drawBean(g.x, g.y, {
