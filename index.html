@@ -268,6 +268,10 @@
       .dialog-rant { font-size: 13px; padding: 9px 11px; }
       .choice-btn { font-size: 12.5px; padding: 9px 11px; }
     }
+    .job-guide { position:absolute; z-index:2; top:44px; left:12px; max-width:min(68%,420px);
+      padding:7px 10px; border:1px solid #64748b; border-radius:8px; background:#0f172aed;
+      color:#f1f5f9; font-size:12px; line-height:1.35; pointer-events:none; }
+    @media (max-width:700px) { .job-guide { top:38px; left:8px; max-width:66%; padding:5px 7px; font-size:11px; } }
   </style>
 </head>
 <body>
@@ -278,7 +282,7 @@
       </div>
       <div>
         <div class="hud-title">BIO-ONE HIGHLANDS · HAZMAT HERO</div>
-        <div class="hud-sub" id="hud-level">Job 1: The Hoarder's Split-Level</div>
+        <div class="hud-sub" id="hud-level">Job 1: The Saturday Spill</div>
       </div>
     </div>
     <div class="hud-stats">
@@ -298,6 +302,7 @@
   <div class="stage-wrap">
     <canvas id="game" width="1024" height="640"></canvas>
     <div class="room-banner" id="room-banner">📍 FRONT FOYER</div>
+    <div class="job-guide" id="job-guide" aria-live="polite"></div>
 
     <div class="touch-controls" id="touch-controls">
       <div class="joy-base" id="joy-base">
@@ -313,11 +318,11 @@
       <img src="assets/hank.png" alt="Hank" style="width:116px;height:116px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6));" onerror="this.style.display='none'" />
       <h1>HAZMAT HERO</h1>
       <p>
-        Walk through a <strong>3D First-Person hoarder house</strong> as <strong>Hank</strong> (or tap <strong>👁️ 3D FP</strong> for Top-Down)!
-        Find your <strong>PPE</strong> and <strong>Bio-One tools</strong> (Pump Sprayer, Rags, Shovel, Air Scrubber, Negative Air Barrier),
-        haul trash to the <strong>Garage Dumpster</strong>, calm <strong>freaking-out clients</strong>, and dodge <strong>OSHA Gary &amp; Raccoon Dave</strong>!
+        Four dispatches, from a simple living-room spill to the 47-Cat Estate. Start with gloves and rags, then unlock tougher messes, new gear, safety checks and some wildly unhelpful wildlife.
+        Play in <strong>3D first-person</strong> or switch to the <strong>2D map</strong> anytime.
       </p>
-      <button class="btn" id="btn-start">ENTER IN 3D FIRST-PERSON →</button>
+      <button class="btn" id="btn-start">START JOB 1 →</button>
+      <small style="color:#94a3b8;">Fictional arcade challenges, not field procedures or safety training.</small>
       <div style="font-size:12px; color:#94a3b8;">
         Walk &amp; Turn: <span class="kbd">WASD</span> / <span class="kbd">Arrows</span> &nbsp;·&nbsp;
         Scrub / Talk: <span class="kbd">SPACE</span> / <span class="kbd">E</span> &nbsp;·&nbsp;
@@ -403,8 +408,17 @@
       roach: 'assets/roach.png',
       cat: 'assets/cat.png',
       roomba: 'assets/roomba.png',
+      sofaArt: 'assets/prop-sofa.webp',
+      tvArt: 'assets/prop-tv.webp',
+      chairArt: 'assets/prop-chair.webp',
+      shelfArt: 'assets/prop-shelf.webp',
+      clutterArt: 'assets/prop-clutter.webp',
+      bagsArt: 'assets/prop-bags.webp',
+      sludgeArt: 'assets/prop-sludge.webp',
+      tubArt: 'assets/prop-tub.webp',
+      drumArt: 'assets/prop-drum.webp',
     };
-    const SPRITE_VERSION = 'cast-1';
+    const SPRITE_VERSION = 'dispatch-2';
     const SPRITES = {};
     for (const [k, url] of Object.entries(SPRITE_URLS)) {
       const img = new Image();
@@ -556,14 +570,16 @@
     const HOUSE_PROPS = [
       // Living room couch, rug, TV
       { type: 'rug', x: 170, y: 240, w: 280, h: 170, color: '#6b2c2c' },
-      { type: 'couch', x: 190, y: 120, w: 210, h: 68 },
-      { type: 'tv', x: 220, y: 540, w: 150, h: 44 },
+      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 184, solid: true },
+      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 130, solid: true },
+      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 89 },
+      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 82 },
       // Kitchen island & fridge
       { type: 'counter', x: 820, y: 100, w: 290, h: 58 },
       { type: 'island', x: 860, y: 310, w: 200, h: 86 },
       // Garage workbench & shelving
       { type: 'counter', x: 1460, y: 95, w: 280, h: 55 },
-      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120 },
+      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 106 },
       // Bedroom bed & rug
       { type: 'rug', x: 150, y: 820, w: 300, h: 200, color: '#2b3e63' },
       { type: 'bed', x: 105, y: 980, w: 190, h: 155 },
@@ -571,9 +587,11 @@
       { type: 'tub', x: 1050, y: 740, w: 165, h: 85 },
       { type: 'counter', x: 740, y: 1130, w: 210, h: 54 },
       // Basement crates
-      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100 },
-      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110 },
+      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 116 },
+      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 124 },
     ];
+
+    const SOLID_PROPS = HOUSE_PROPS.filter((p) => p.solid);
 
     const TOOL_META = {
       sprayer:  { name: 'Pump Sprayer',         icon: '🧴' },
@@ -586,7 +604,34 @@
 
     const LEVELS = [
       {
-        name: "Job 1: The Hoarder's Split-Level",
+        name: 'Job 1: The Saturday Spill',
+        guide: 'Start here: grab the blue gloves and orange rags near the entry, then hold E or Scrub at each mess.',
+        review: '“The only thing left on the floor is my dignity.”',
+        ppe: [{ kind: 'gloves', label: 'Nitrile Gloves', x: 125, y: 239 }],
+        tools: [{ kind: 'rags', x: 190, y: 261 }],
+        hazards: [
+          { kind: 'hoard', label: 'The Great Nacho Avalanche', x: 302, y: 328, hp: 0.8, val: 80, reqTool: 'rags', reqPpe: ['gloves'] },
+          { kind: 'hoard', art: 'sludgeArt', label: 'Soda: Now Part of the Floor', x: 429, y: 395, hp: 1.0, val: 100, reqTool: 'rags', reqPpe: ['gloves'] },
+        ],
+        oshas: [], inspectors: [], clients: [],
+      },
+      {
+        name: 'Job 2: The Garage of Regret',
+        guide: 'Grab gloves, rags and the shovel. Clear the blocked exit and take one bag at a time to the garage dumpster.',
+        review: '“We can finally open the garage. Can you do my junk drawer next?”',
+        ppe: [{ kind: 'gloves', label: 'Nitrile Gloves', x: 128, y: 264 }],
+        tools: [{ kind: 'rags', x: 193, y: 282 }, { kind: 'shovel', x: 1395, y: 293 }],
+        hazards: [
+          { kind: 'hoard', label: 'Three Decades of Warranty Cards', x: 540, y: 357, hp: 1.2, val: 150, reqTool: 'rags', reqPpe: ['gloves'] },
+          { kind: 'hoard', label: 'Pizza Box Penthouse', x: 1460, y: 388, hp: 1.7, val: 240, reqTool: 'shovel', reqPpe: ['gloves'], haul: true },
+          { kind: 'hoard', art: 'bagsArt', label: 'Black Bags of Unanswered Questions', x: 1670, y: 285, hp: 1.9, val: 290, reqTool: 'shovel', reqPpe: ['gloves'], haul: true, requiresCheck: 'Blocked Fire Exit' },
+        ],
+        oshas: [{ label: 'Blocked Fire Exit', fixMsg: 'Emergency route clear!', x: 1640, y: 177, hp: 0.8, val: 150 }],
+        inspectors: [], clients: [],
+      },
+      {
+        name: "Job 3: The Hoarder's Split-Level",
+        guide: 'Full PPE for red-zone messes. Match each mess to the tool icon, fix safety flags, haul bags and calm your clients.',
         review: '“Found my 1996 Bowling Trophy AND my kitchen floor! 5 stars!” — Dave from Morristown',
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 500,  y: 160 },
@@ -706,7 +751,8 @@
         ]
       },
       {
-        name: "Job 2: Grandma's 47-Cat Estate",
+        name: "Job 4: Grandma's 47-Cat Estate",
+        guide: 'Full PPE, more roaming trouble and safety gates. Fix the scrubber and wiring flags before clearing their linked messes.',
         review: '“ATP Swab read 0 RLU! Even the cats are impressed.” — Bio-One HQ',
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 1740, y: 150 },
@@ -723,17 +769,17 @@
         hazards: [
           { kind: 'bio',   label: 'Mount Kitty-Litter (Active)',  x: 200,  y: 470,  hp: 3.2, val: 850, reqTool: 'shovel',   haul: true },
           { kind: 'hoard', label: 'Leaning Tower of Pizza Boxes', x: 1140, y: 470,  hp: 2.8, val: 520, reqTool: 'shovel',   haul: true },
-          { kind: 'odor',  label: 'Cat-Pee Tear Gas Cloud',       x: 1520, y: 290,  hp: 4.0, val: 680, reqTool: 'scrubber' },
+          { kind: 'odor',  label: 'Cat-Pee Tear Gas Cloud',       x: 1520, y: 290,  hp: 4.0, val: 680, reqTool: 'scrubber', requiresCheck: 'No Air Scrubber' },
           { kind: 'bio',   label: 'Radioactive Hairball Carpet',  x: 450,  y: 800,  hp: 3.4, val: 950, reqTool: 'sprayer' },
           { kind: 'bio',   label: 'Cursed Clawfoot Soup',         x: 920,  y: 960,  hp: 2.2, val: 980, reqTool: 'rags' },
           { kind: 'hoard', label: '1978 QVC Catalog Shrine',      x: 1540, y: 1110, hp: 2.6, val: 560, reqTool: 'shovel',   haul: true },
-          { kind: 'bio',   label: 'Glowing "Do Not Open" Drum',   x: 1730, y: 840,  hp: 5.0, val: 1100, reqTool: 'barrier' },
+          { kind: 'bio',   label: 'Glowing "Do Not Open" Drum',   x: 1730, y: 840,  hp: 5.0, val: 1100, reqTool: 'barrier', requiresCheck: 'Exposed Wiring' },
         ],
         oshas: [
           { label: 'Missing SDS Binder',  fixMsg: 'SDS Binder Restocked!',   x: 520,  y: 160,  hp: 1.1, val: 480 },
           { label: 'Sketchy Step Ladder', fixMsg: 'OSHA Step Stool Placed!', x: 760,  y: 210,  hp: 1.1, val: 480 },
           { label: 'Exposed Wiring',      fixMsg: 'Locked Out & Tagged!',    x: 1410, y: 1120, hp: 1.2, val: 550 },
-          { label: 'No Air Scrubber',     fixMsg: 'HEPA Scrubber Online!',   x: 1140, y: 940,  hp: 1.2, val: 600 },
+          { label: 'No Air Scrubber',     fixMsg: 'HEPA Scrubber Online!',   x: 1140, y: 940,  hp: 1.2, val: 600, reqTool: 'scrubber' },
         ],
         inspectors: [
           { name: 'OSHA Gary', x: 960, y: 480, vx: -115, vy: 85 },
@@ -820,6 +866,7 @@
     let joyDx = 0, joyDy = 0, joyMag = 0, touchActing = false;
     let player = null, walls = [], ppeItems = [], toolItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
     let activeClient = null, talkCooldown = 0, toolWarnCooldown = 0;
+    let colliders = [];
     let particles = [], floaters = [];
     let cam = { x: 0, y: 0 };
     let fineCooldown = 0, scrubSoundCooldown = 0;
@@ -841,6 +888,7 @@
       levelIdx = idx % LEVELS.length;
       const L = LEVELS[levelIdx];
       walls = buildHouseWalls();
+      colliders = walls.concat(SOLID_PROPS);
       player = {
         x: 160, y: 160, r: 21,
         facing: 1, angle: 0.48,
@@ -868,6 +916,9 @@
       cam.y = Math.max(0, Math.min(WORLD_H - VH, player.y - VH / 2));
 
       document.getElementById('hud-level').textContent = L.name;
+      document.getElementById('job-guide').textContent = L.guide;
+      currentRoomName = '';
+      toolWarnCooldown = 0;
       document.getElementById('win-overlay').classList.add('hidden');
       document.getElementById('client-overlay').classList.add('hidden');
       updateHud();
@@ -946,9 +997,14 @@
       activeClient = null;
       talkCooldown = 0.5;
       document.getElementById('client-overlay').classList.add('hidden');
-      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed)) {
+      if (running && jobComplete()) {
         showWin();
       }
+    }
+
+    function jobComplete() {
+      return hazards.every((h) => h.done) && oshas.every((o) => o.done)
+        && clients.every((c) => c.calmed) && !player.carryingTrash;
     }
 
     function ppeCount() { return (player.suit ? 1 : 0) + (player.mask ? 1 : 0) + (player.gloves ? 1 : 0); }
@@ -956,11 +1012,12 @@
     function updateHud() {
       const pc = ppeCount();
       const ppeEl = document.getElementById('hud-ppe');
-      ppeEl.className = 'stat-pill ' + (pc === 3 ? 'ppe-ok' : 'ppe-warn');
-      ppeEl.textContent = pc === 3 ? '🦺 PPE: 3/3 (OSHA Proof!)' : `🦺 PPE: ${pc}/3 (${pc === 0 ? 'Crocs Only!' : 'Find More!'})`;
+      const ppeTotal = LEVELS[levelIdx].ppe.length;
+      ppeEl.className = 'stat-pill ' + (pc === ppeTotal ? 'ppe-ok' : 'ppe-warn');
+      ppeEl.textContent = `🦺 PPE: ${pc}/${ppeTotal}${pc === ppeTotal ? ' Ready' : ''}`;
       const ownedIcons = Object.keys(player.tools || {}).map((k) => TOOL_META[k].icon).join('');
       const tc = Object.keys(player.tools || {}).length;
-      document.getElementById('hud-tools').textContent = tc ? `🧰 ${tc}/5 ${ownedIcons}` : '🧰 Tools: 0/5';
+      document.getElementById('hud-tools').textContent = `🧰 Tools: ${tc}/${LEVELS[levelIdx].tools.length} ${ownedIcons}`;
       document.getElementById('hud-trash').style.display = player.carryingTrash ? 'inline-flex' : 'none';
       document.getElementById('hud-clean').textContent = `🧹 Hazards: ${hazards.filter((h) => !h.done).length}`;
       document.getElementById('hud-osha').textContent = `⚠️ OSHA: ${oshas.filter((o) => !o.done).length}`;
@@ -981,7 +1038,7 @@
     }
 
     function collidesWall(nx, ny, r) {
-      for (const w of walls) {
+      for (const w of colliders) {
         const cx = Math.max(w.x, Math.min(nx, w.x + w.w));
         const cy = Math.max(w.y, Math.min(ny, w.y + w.h));
         if (Math.hypot(nx - cx, ny - cy) < r) return true;
@@ -1134,13 +1191,24 @@
           }
         }
         if (target) {
-          if (!isOsha && target.kind === 'bio' && ppeCount() < 3) {
+          const requiredPpe = target.reqPpe || [];
+          if (!isOsha && requiredPpe.some((kind) => !player[kind])) {
+            if (toolWarnCooldown <= 0) {
+              toolWarnCooldown = 1.6;
+              addFloater(player.x, player.y - 36, '🦺 PICK UP THE BLUE GLOVES FIRST!', '#7dd3fc');
+            }
+          } else if (!isOsha && target.kind === 'bio' && ppeCount() < 3) {
             if (fineCooldown <= 0) {
               fineCooldown = 2.0; fines += 1; score = Math.max(0, score - 200);
               sfx('whistle');
               addFloater(player.x, player.y - 36, '🚨 NEED FULL PPE! -$200', '#fca5a5');
             }
-          } else if (!isOsha && target.reqTool && !player.tools[target.reqTool]) {
+          } else if (!isOsha && target.requiresCheck && oshas.some((o) => o.label === target.requiresCheck && !o.done)) {
+            if (toolWarnCooldown <= 0) {
+              toolWarnCooldown = 1.6;
+              addFloater(player.x, player.y - 36, `⚠️ CLEAR THE SAFETY FLAG FIRST: ${target.requiresCheck}`, '#fde047');
+            }
+          } else if (target.reqTool && !player.tools[target.reqTool]) {
             if (toolWarnCooldown <= 0) {
               toolWarnCooldown = 1.6;
               const tm = TOOL_META[target.reqTool];
@@ -1263,7 +1331,7 @@
       floaters = floaters.filter((f) => { f.y -= 30 * dt; f.life -= dt; return f.life > 0; });
 
       updateHud();
-      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed) && !player.carryingTrash) showWin();
+      if (jobComplete()) showWin();
     }
 
     // ================= LIFELIKE 1980s ILLUSTRATED CHARACTER RENDERER =================
@@ -1783,6 +1851,56 @@
     }
 
 
+    function artDimensions(art, maxW, maxH) {
+      const ratio = art.naturalWidth / art.naturalHeight;
+      const w = Math.min(maxW, maxH * ratio);
+      return [w, w / ratio];
+    }
+
+    function drawPropArt(art, x, foot, maxW, maxH) {
+      const [w, h] = artDimensions(art, maxW, maxH);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(x, foot - 3, w * 0.48, Math.max(2, h * 0.08), 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.drawImage(art, x - w / 2, foot - h, w, h);
+      ctx.restore();
+      return h;
+    }
+
+    function messArtKey(h) {
+      if (h.art) return h.art;
+      if (h.label.includes('Drum')) return 'drumArt';
+      if (h.label.includes('Clawfoot')) return 'tubArt';
+      if (h.haul && h.kind === 'bio') return 'bagsArt';
+      return h.kind === 'hoard' ? 'clutterArt' : 'sludgeArt';
+    }
+
+    function drawMessArt(h, x, foot, scale) {
+      const key = messArtKey(h);
+      const art = spriteReady(key);
+      if (!art) return 0;
+      const large = key === 'tubArt' || key === 'drumArt';
+      const height = drawPropArt(art, x, foot, (large ? 88 : 73) * scale, (large ? 70 : 47) * scale);
+      if (h.kind === 'odor') {
+        ctx.save();
+        for (let i = 0; i < 3; i++) {
+          const flicker = ((elapsed * (0.52 + i * 0.05) + i / 3) % 1);
+          const px = x + (i * 13 - 13 + Math.sin(elapsed * 1.8 + i) * 8) * scale;
+          const py = foot - height - (7 + 18 * flicker) * scale;
+          const rad = (7 + 10 * flicker) * scale;
+          const mist = ctx.createRadialGradient(px, py, 0, px, py, rad);
+          mist.addColorStop(0, `rgba(157, 96, 180, ${0.57 * (1 - flicker)})`);
+          mist.addColorStop(1, 'rgba(157, 96, 180, 0)');
+          ctx.fillStyle = mist;
+          ctx.fillRect(px - rad, py - rad, 2 * rad, 2 * rad);
+        }
+        ctx.restore();
+      }
+      return height;
+    }
+
     function roundRect(x, y, w, h, r) {
       ctx.beginPath();
       ctx.moveTo(x + r, y);
@@ -1838,10 +1956,23 @@
         ctx.fillText(rm.name.toUpperCase(), rm.x + rm.w / 2, rm.y + rm.h / 2);
       }
 
+      // Paint continuous door thresholds in the gaps between room flooring.
+      ctx.fillStyle = '#4c4742';
+      for (const x of [640, 1280]) for (const y of [260, 880]) ctx.fillRect(x, y, 26, 130);
+      for (const x of [270, 890, 1510]) ctx.fillRect(x, 640, 140, 26);
+
       // 2) Furniture Props (Detailed 2.5D shaded!)
       for (const p of HOUSE_PROPS) {
         ctx.save();
-        if (p.type === 'rug') {
+        const art = p.art && spriteReady(p.art);
+        if (art) {
+          const x = p.x + p.w / 2, y = p.y + p.h;
+          const room = HOUSE_ROOMS.find((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
+          if (room) {
+            ctx.beginPath(); ctx.rect(room.x, room.y, room.w, room.h); ctx.clip();
+          }
+          drawPropArt(art, x, y, p.size, 135);
+        } else if (p.type === 'rug') {
           ctx.fillStyle = p.color;
           roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill();
           ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 3;
@@ -1918,7 +2049,7 @@
       for (const w of walls) {
         // Floor drop shadow
         ctx.fillStyle = 'rgba(0,0,0,0.38)';
-        ctx.fillRect(w.x + 6, w.y + 8, w.w, w.h + 6);
+        ctx.fillRect(w.x, w.y + 4, w.w, w.h + 3);
         // Front vertical 3D face
         ctx.fillStyle = '#5c4738';
         ctx.fillRect(w.x, w.y, w.w, w.h);
@@ -1938,7 +2069,8 @@
         }
         const pulse = Math.sin(elapsed * 4.5 + h.x) * 2.5;
         ctx.save();
-        if (h.kind === 'bio') {
+        const artHeight = drawMessArt(h, h.x, h.y + 19, 1);
+        if (!artHeight && h.kind === 'bio') {
           ctx.fillStyle = '#22c55e'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.ellipse(h.x, h.y, 28 + pulse, 20 + pulse * 0.6, 0.2, 0, Math.PI * 2);
@@ -1946,14 +2078,14 @@
           ctx.fillStyle = '#86efac';
           ctx.beginPath(); ctx.arc(h.x - 8, h.y - 4, 5, 0, Math.PI * 2); ctx.fill();
           ctx.beginPath(); ctx.arc(h.x + 10, h.y + 3, 3.5, 0, Math.PI * 2); ctx.fill();
-        } else if (h.kind === 'odor') {
+        } else if (!artHeight && h.kind === 'odor') {
           ctx.fillStyle = 'rgba(168, 85, 247, 0.65)'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.arc(h.x - 10, h.y, 16 + pulse * 0.5, 0, Math.PI * 2);
           ctx.arc(h.x + 10, h.y - 3, 15, 0, Math.PI * 2);
           ctx.arc(h.x, h.y + 8, 14, 0, Math.PI * 2);
           ctx.fill(); ctx.stroke();
-        } else {
+        } else if (!artHeight) {
           // Chunky hoarding pile of boxes & papers
           ctx.fillStyle = '#d97706'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
           roundRect(h.x - 24, h.y - 16, 26, 24, 4); ctx.fill(); ctx.stroke();
@@ -1967,7 +2099,7 @@
         ctx.fillStyle = '#000'; ctx.fillText(h.label + toolTag, h.x + 1, h.y + 35);
         ctx.fillStyle = (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc';
         ctx.fillText(h.label + toolTag, h.x, h.y + 34);
-        if (h.progress > 0) drawProgressBar(h.x, h.y - 34, h.progress / h.hp, '#22c55e');
+        if (h.progress > 0) drawProgressBar(h.x, h.y - Math.max(34, artHeight - 11), h.progress / h.hp, '#22c55e');
         ctx.restore();
       }
 
@@ -2257,7 +2389,7 @@
       ctx.fillRect(0, horizon, VW, VH - horizon);
 
       // 2) Raycast Texture-Mapped 3D Walls (Drywall + Wainscoting + Molding!) + Z-Buffer
-      const stripW = VW > 720 ? 3 : 3;
+      const stripW = 3;
       const numRays = Math.ceil(VW / stripW);
       const zBuf = new Float32Array(numRays);
       const projPlane = (VW / 2) / Math.tan(fov / 2);
@@ -2275,18 +2407,21 @@
         const x = i * stripW;
         const texX = ((Math.floor(hit.u * 1.4) % 256) + 256) % 256;
 
-        ctx.drawImage(WALL_TEX, texX, 0, 2, 256, x, top, stripW + 0.6, wallH);
+        ctx.drawImage(WALL_TEX, texX, 0, 1, 256, x, top, stripW + 0.25, wallH);
 
         // Realistic directional & distance shading overlay
         const shade = Math.min(0.76, (hit.side === 1 ? 0.16 : 0) + (perpDist / 1250) * 0.68);
         if (shade > 0.02) {
           ctx.fillStyle = `rgba(12, 16, 26, ${shade.toFixed(2)})`;
-          ctx.fillRect(x, top, stripW + 0.6, wallH);
+          ctx.fillRect(x, top, stripW + 0.25, wallH);
         }
       }
 
       // 3) Collect All 3D Billboards (Characters, Clients, Bad Guys, Hazards, OSHA, PPE, Tools, Dumpster!)
       const sprites = [];
+      for (const p of HOUSE_PROPS) {
+        if (p.art && spriteReady(p.art)) sprites.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, type: 'prop', item: p });
+      }
       for (const p of ppeItems) if (!p.taken) sprites.push({ x: p.x, y: p.y, type: 'ppe', item: p });
       for (const t of toolItems) if (!t.taken) sprites.push({ x: t.x, y: t.y, type: 'tool', item: t });
       sprites.push({ x: DUMPSTER.x, y: DUMPSTER.y, type: 'dumpster', item: DUMPSTER });
@@ -2303,7 +2438,8 @@
         if (fwd < 18 || fwd > 1250) continue;
         const side = -vx * sinA + vy * cosA;
         const screenX = (VW / 2) + (side / fwd) * projPlane;
-        if (screenX < -180 || screenX > VW + 180) continue;
+        const overflow = s.type === 'prop' ? (s.item.size * projPlane / fwd) * 0.5 : 180;
+        if (screenX < -overflow || screenX > VW + overflow) continue;
         visibleSprites.push({ ...s, dist: fwd, screenX });
       }
       visibleSprites.sort((a, b) => b.dist - a.dist); // Painter's algorithm: far to near
@@ -2315,27 +2451,30 @@
         const isSmallCritter = (s.type === 'enemy' && (s.item.isRaccoon || s.item.isRoomba || s.item.isRoach || s.item.isCat));
         const baseFactor = isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
         const scale = Math.min(5.8, (baseFactor * projPlane) / s.dist);
-        const halfW = Math.max(24, 34 * scale);
+        const halfW = Math.max(24, (s.type === 'prop' ? s.item.size / 2 : (s.type === 'hazard' ? 52 : 36)) * scale);
         const startCol = Math.max(0, Math.floor((s.screenX - halfW) / stripW));
         const endCol = Math.min(numRays - 1, Math.ceil((s.screenX + halfW) / stripW));
 
-        // Find contiguous visible horizontal span in Z-buffer so sprites peek around walls!
-        let visL = -1, visR = -1;
-        for (let c = startCol; c <= endCol; c++) {
-          if (s.dist < zBuf[c] + 8) {
-            if (visL === -1) visL = c * stripW;
-            visR = (c + 1) * stripW;
-          }
+        // Use separate visible runs, never paint the hidden gap between two door openings.
+        const visibleRuns = [];
+        let run = -1;
+        for (let c = startCol; c <= endCol + 1; c++) {
+          const visible = c <= endCol && s.dist < zBuf[c] + 2;
+          if (visible && run < 0) run = c;
+          if (!visible && run >= 0) { visibleRuns.push([run * stripW, (c - run) * stripW]); run = -1; }
         }
-        if (visL === -1) continue;
+        if (!visibleRuns.length) continue;
 
         const floorY = horizon + (44 * projPlane) / s.dist;
         ctx.save();
         ctx.beginPath();
-        ctx.rect(visL, 0, Math.max(1, visR - visL), VH);
+        for (const [x, w] of visibleRuns) ctx.rect(x, 0, w, VH);
         ctx.clip();
 
-        if (s.type === 'client') {
+        if (s.type === 'prop') {
+          const art = spriteReady(s.item.art);
+          if (art) drawPropArt(art, s.screenX, floorY, s.item.size * scale, 96 * scale);
+        } else if (s.type === 'client') {
           const c = s.item;
           ctx.save();
           ctx.translate(s.screenX, floorY - 26 * scale);
@@ -2419,18 +2558,19 @@
           const h = s.item;
           ctx.save();
           ctx.translate(s.screenX, floorY - 12 * scale);
-          if (h.kind === 'bio') {
+          const artHeight = drawMessArt(h, 0, 12 * scale, scale);
+          if (!artHeight && h.kind === 'bio') {
             ctx.fillStyle = '#22c55e'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.5 * scale);
             ctx.beginPath(); ctx.ellipse(0, 4 * scale, 32 * scale, 13 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#86efac'; ctx.beginPath(); ctx.arc(-9 * scale, 2 * scale, 4.5 * scale, 0, Math.PI * 2); ctx.fill();
-          } else if (h.kind === 'odor') {
+          } else if (!artHeight && h.kind === 'odor') {
             ctx.fillStyle = 'rgba(168, 85, 247, 0.72)'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.2 * scale);
             ctx.beginPath();
             ctx.arc(-11 * scale, -6 * scale, 17 * scale, 0, Math.PI * 2);
             ctx.arc(11 * scale, -9 * scale, 16 * scale, 0, Math.PI * 2);
             ctx.arc(0, 2 * scale, 15 * scale, 0, Math.PI * 2);
             ctx.fill(); ctx.stroke();
-          } else {
+          } else if (!artHeight) {
             ctx.fillStyle = '#d97706'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.4 * scale);
             roundRect(-24 * scale, -14 * scale, 26 * scale, 24 * scale, 4 * scale); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#f59e0b';
@@ -2439,7 +2579,7 @@
           ctx.restore();
           const tTag = h.reqTool ? ` [${TOOL_META[h.reqTool].icon}${h.haul ? '→🗑️' : ''}]` : '';
           fpLabels.push({
-            x: s.screenX, y: floorY - 38 * scale,
+            x: s.screenX, y: floorY - Math.max(38 * scale, artHeight + 10 * scale),
             text: h.label + tTag,
             color: (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc',
             prog: h.progress > 0 ? h.progress / h.hp : 0, progCol: '#22c55e'
