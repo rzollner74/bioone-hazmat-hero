@@ -417,8 +417,14 @@
       sludgeArt: 'assets/prop-sludge.webp',
       tubArt: 'assets/prop-tub.webp',
       drumArt: 'assets/prop-drum.webp',
+      handBare: 'assets/fp-bare.webp',
+      handGlove: 'assets/fp-glove.webp',
+      handRag: 'assets/fp-rag.webp',
+      handSprayer: 'assets/fp-sprayer.webp',
+      handScoop: 'assets/fp-scoop.webp',
+      handBag: 'assets/fp-bag.webp',
     };
-    const SPRITE_VERSION = 'dispatch-2';
+    const SPRITE_VERSION = 'view-3';
     const SPRITES = {};
     for (const [k, url] of Object.entries(SPRITE_URLS)) {
       const img = new Image();
@@ -570,16 +576,16 @@
     const HOUSE_PROPS = [
       // Living room couch, rug, TV
       { type: 'rug', x: 170, y: 240, w: 280, h: 170, color: '#6b2c2c' },
-      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 184, solid: true },
-      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 130, solid: true },
-      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 89 },
-      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 82 },
+      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 154, fpW: 98, fpH: 41, solid: true },
+      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 92, fpW: 49, fpH: 45, solid: true },
+      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 37, fpH: 40 },
+      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 62, fpW: 42, fpH: 60 },
       // Kitchen island & fridge
       { type: 'counter', x: 820, y: 100, w: 290, h: 58 },
       { type: 'island', x: 860, y: 310, w: 200, h: 86 },
       // Garage workbench & shelving
       { type: 'counter', x: 1460, y: 95, w: 280, h: 55 },
-      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 106 },
+      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 75, fpW: 46, fpH: 64 },
       // Bedroom bed & rug
       { type: 'rug', x: 150, y: 820, w: 300, h: 200, color: '#2b3e63' },
       { type: 'bed', x: 105, y: 980, w: 190, h: 155 },
@@ -587,8 +593,8 @@
       { type: 'tub', x: 1050, y: 740, w: 165, h: 85 },
       { type: 'counter', x: 740, y: 1130, w: 210, h: 54 },
       // Basement crates
-      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 116 },
-      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 124 },
+      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 81, fpW: 47, fpH: 32 },
+      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 88, fpW: 54, fpH: 35 },
     ];
 
     const SOLID_PROPS = HOUSE_PROPS.filter((p) => p.solid);
@@ -896,7 +902,7 @@
         facing: 1, angle: 0.48,
         suit: false, mask: false, gloves: false,
         tools: {}, carryingTrash: false,
-        stepPhase: 0, moving: false, scrubbing: false
+        stepPhase: 0, moving: false, scrubbing: false, activeTool: null
       };
       ppeItems = L.ppe.map((p) => ({ ...p, taken: false }));
       toolItems = (L.tools || []).map((t) => ({ ...t, taken: false, label: TOOL_META[t.kind].name, icon: TOOL_META[t.kind].icon }));
@@ -1173,6 +1179,7 @@
       // Scrub / Fix OSHA / Talk to Freaking-Out Clients
       const acting = keys['Space'] || keys['KeyE'] || touchActing;
       player.scrubbing = false;
+      player.activeTool = null;
       if (acting && talkCooldown <= 0) {
         for (const c of clients) {
           if (!c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76) {
@@ -1225,6 +1232,7 @@
             }
           } else {
             player.scrubbing = true;
+            player.activeTool = target.reqTool || null;
             const rate = ppeCount() === 3 ? 1.15 : 0.85;
             target.progress += dt * rate;
             if (scrubSoundCooldown <= 0) {
@@ -1864,7 +1872,7 @@
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
-      ctx.ellipse(x, foot - 3, w * 0.48, Math.max(2, h * 0.08), 0, 0, Math.PI * 2);
+      ctx.ellipse(x, foot - 3, w * 0.39, Math.max(2, h * 0.06), 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.drawImage(art, x - w / 2, foot - h, w, h);
       ctx.restore();
@@ -1884,7 +1892,7 @@
       const art = spriteReady(key);
       if (!art) return 0;
       const large = key === 'tubArt' || key === 'drumArt';
-      const height = drawPropArt(art, x, foot, (large ? 88 : 73) * scale, (large ? 70 : 47) * scale);
+      const height = drawPropArt(art, x, foot, (large ? 70 : 52) * scale, (large ? 48 : 34) * scale);
       if (h.kind === 'odor') {
         ctx.save();
         for (let i = 0; i < 3; i++) {
@@ -1973,7 +1981,7 @@
           if (room) {
             ctx.beginPath(); ctx.rect(room.x, room.y, room.w, room.h); ctx.clip();
           }
-          drawPropArt(art, x, y, p.size, 135);
+          drawPropArt(art, x, y, p.size, 106);
         } else if (p.type === 'rug') {
           ctx.fillStyle = p.color;
           roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill();
@@ -2440,7 +2448,7 @@
         if (fwd < 18 || fwd > 1250) continue;
         const side = -vx * sinA + vy * cosA;
         const screenX = (VW / 2) + (side / fwd) * projPlane;
-        const overflow = s.type === 'prop' ? (s.item.size * projPlane / fwd) * 0.5 : 180;
+        const overflow = s.type === 'prop' ? (s.item.fpW * projPlane / fwd) * 0.5 : 180;
         if (screenX < -overflow || screenX > VW + overflow) continue;
         visibleSprites.push({ ...s, dist: fwd, screenX });
       }
@@ -2452,8 +2460,11 @@
         const isBigChar = (s.type === 'client' || (s.type === 'enemy' && !s.item.isRaccoon && !s.item.isRoomba && !s.item.isRoach && !s.item.isCat));
         const isSmallCritter = (s.type === 'enemy' && (s.item.isRaccoon || s.item.isRoomba || s.item.isRoach || s.item.isCat));
         const baseFactor = isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
-        const scale = Math.min(5.8, (baseFactor * projPlane) / s.dist);
-        const halfW = Math.max(24, (s.type === 'prop' ? s.item.size / 2 : (s.type === 'hazard' ? 52 : 36)) * scale);
+        // Foreground limits preserve the room's scale when Hank walks right up to a billboard.
+        const limit = s.type === 'prop' ? (VH * 0.48 / s.item.fpH)
+          : s.type === 'hazard' ? (VH * 0.28 / 48) : 5.8;
+        const scale = Math.min(5.8, limit, (baseFactor * projPlane) / s.dist);
+        const halfW = Math.max(24, (s.type === 'prop' ? s.item.fpW / 2 : (s.type === 'hazard' ? 52 : 36)) * scale);
         const startCol = Math.max(0, Math.floor((s.screenX - halfW) / stripW));
         const endCol = Math.min(numRays - 1, Math.ceil((s.screenX + halfW) / stripW));
 
@@ -2475,7 +2486,7 @@
 
         if (s.type === 'prop') {
           const art = spriteReady(s.item.art);
-          if (art) drawPropArt(art, s.screenX, floorY, s.item.size * scale, 96 * scale);
+          if (art) drawPropArt(art, s.screenX, floorY, s.item.fpW * scale, s.item.fpH * scale);
         } else if (s.type === 'client') {
           const c = s.item;
           ctx.save();
@@ -2624,6 +2635,16 @@
       ctx.restore();
     }
 
+    function getViewHandKey() {
+      if (!player.gloves) return 'handBare';
+      const heldArt = { rags: 'handRag', shovel: 'handScoop', sprayer: 'handSprayer' };
+      if (player.scrubbing) return heldArt[player.activeTool] || 'handGlove';
+      for (const tool of ['rags', 'sprayer', 'shovel']) {
+        if (player.tools[tool]) return heldArt[tool];
+      }
+      return 'handGlove';
+    }
+
     function drawFPHands() {
       ctx.save();
       // Subtle P100 safety goggles frame when wearing mask
@@ -2645,51 +2666,36 @@
       ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 8);
       ctx.stroke();
 
-      // First-Person Bio-One Decon Pressure Sprayer + Gloved Hand (bottom-right!)
-      const bobX = player.moving ? Math.cos(player.stepPhase * 0.7) * 9 : Math.sin(elapsed * 2) * 2;
-      const bobY = player.moving ? Math.abs(Math.sin(player.stepPhase * 0.7)) * 10 : Math.cos(elapsed * 2) * 2;
-      const recoil = player.scrubbing ? Math.sin(elapsed * 32) * 7 : 0;
-      const gx = VW * 0.74 + bobX;
-      const gy = VH - 84 + bobY + recoil;
-
-      // Chem 1 / Chem 4 Decon Spray Stream when scrubbing!
-      if (player.scrubbing) {
-        const sGrad = ctx.createLinearGradient(gx - 38, gy - 44, cx, cy);
-        sGrad.addColorStop(0, 'rgba(0, 240, 255, 0.85)');
-        sGrad.addColorStop(0.5, 'rgba(57, 255, 20, 0.55)');
-        sGrad.addColorStop(1, 'rgba(57, 255, 20, 0)');
-        ctx.strokeStyle = sGrad; ctx.lineWidth = 14; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(gx - 36, gy - 42); ctx.lineTo(cx, cy); ctx.stroke();
+      const heldKey = getViewHandKey();
+      const hand = spriteReady(heldKey);
+      const walk = player.moving ? Math.sin(player.stepPhase * 0.7) : Math.sin(elapsed * 2) * 0.24;
+      const effort = player.scrubbing ? Math.sin(elapsed * 20) : 0;
+      const bobX = walk * 7 + (heldKey === 'handRag' ? effort * 14 : effort * 4);
+      const bobY = Math.abs(walk) * 8 - Math.abs(effort) * 6;
+      if (hand) {
+        const toolShown = heldKey === 'handSprayer' || heldKey === 'handScoop' || heldKey === 'handRag';
+        const [w, h] = artDimensions(hand, VW * (toolShown ? 0.34 : 0.25), VH * (toolShown ? 0.40 : 0.30));
+        const x = VW + 22 - w + bobX;
+        const y = VH - h + bobY + 5;
+        ctx.drawImage(hand, x, y, w, h);
+        if (player.scrubbing && player.activeTool === 'sprayer') {
+          const hx = x + w * 0.22, hy = y + h * 0.28;
+          ctx.save();
+          for (let i = 0; i < 8; i++) {
+            const t = (elapsed * 3.8 + i / 8) % 1;
+            const px = hx + (cx - hx) * t + Math.sin(i * 3) * t * 8;
+            const py = hy + (cy - hy) * t + Math.cos(i * 5) * t * 8;
+            ctx.fillStyle = `rgba(177,232,246,${(1 - t) * 0.52})`;
+            ctx.beginPath(); ctx.arc(px, py, 1.5 + t * 3.8, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
       }
 
-      // Forearm (white Tyvek sleeve or blue 80s windbreaker)
-      ctx.fillStyle = player.suit ? '#f8fafc' : '#0284c7';
-      ctx.strokeStyle = '#090514'; ctx.lineWidth = 3.5;
-      ctx.beginPath();
-      ctx.moveTo(gx + 10, gy + 95); ctx.lineTo(gx - 22, gy + 10);
-      ctx.lineTo(gx + 24, gy - 4); ctx.lineTo(gx + 64, gy + 95);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Bio-One Orange & Chrome Decon Sprayer Nozzle
-      ctx.fillStyle = '#ff7a00';
-      roundRect(gx - 42, gy - 48, 42, 62, 10); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#cbd5e1';
-      roundRect(gx - 36, gy - 68, 18, 24, 5); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#00f0ff';
-      ctx.fillRect(gx - 32, gy - 32, 22, 9);
-
-      // Hand gripping sprayer (blue nitrile glove if equipped!)
-      ctx.fillStyle = player.gloves ? '#38bdf8' : '#d46a28';
-      roundRect(gx - 18, gy - 12, 34, 30, 12); ctx.fill(); ctx.stroke();
-
-      // Left-hand heavy Bio-One Trash Bag when hauling to Garage Dumpster!
-      if (player.carryingTrash) {
-        const bx = VW * 0.22 - bobX, by = VH - 68 + bobY;
-        ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#090514'; ctx.lineWidth = 3.5;
-        ctx.beginPath(); ctx.ellipse(bx, by + 24, 46, 54, -0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#ef4444'; ctx.fillRect(bx - 16, by - 26, 32, 9); // Red bio-tie!
-        ctx.fillStyle = '#facc15'; ctx.font = '900 11px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillText('☣️ HAUL TO GARAGE', bx, by + 16);
+      const bag = player.carryingTrash && spriteReady('handBag');
+      if (bag) {
+        const [w, h] = artDimensions(bag, VW * 0.30, VH * 0.36);
+        ctx.drawImage(bag, -14 - bobX * 0.55, VH - h + bobY + 6, w, h);
       }
       ctx.restore();
     }
