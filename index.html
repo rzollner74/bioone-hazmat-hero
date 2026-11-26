@@ -599,6 +599,7 @@
       shovel:   { name: 'Flat Shovel',          icon: '⛏️' },
       scrubber: { name: 'HEPA Air Scrubber',    icon: '🌀' },
       barrier:  { name: 'Negative Air Barrier', icon: '🚧' },
+      clo2:     { name: 'ClO₂ Odor-Control Token', icon: '🧪' },
     };
     const DUMPSTER = { x: 1755, y: 120, label: 'BIO-ONE DUMPSTER' };
 
@@ -752,7 +753,7 @@
       },
       {
         name: "Job 4: Grandma's 47-Cat Estate",
-        guide: 'Full PPE, more roaming trouble and safety gates. Fix the scrubber and wiring flags before clearing their linked messes.',
+        guide: 'Find Hank’s ClO₂ token in the garage and clear the scrubber flag for the odor objective. Watch out for the wiring flag and roaming trouble.',
         review: '“ATP Swab read 0 RLU! Even the cats are impressed.” — Bio-One HQ',
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 1740, y: 150 },
@@ -765,11 +766,12 @@
           { kind: 'rags',     x: 180,  y: 780 },
           { kind: 'scrubber', x: 1450, y: 460 },
           { kind: 'barrier',  x: 840,  y: 1080 },
+          { kind: 'clo2',     x: 1420, y: 222 },
         ],
         hazards: [
           { kind: 'bio',   label: 'Mount Kitty-Litter (Active)',  x: 200,  y: 470,  hp: 3.2, val: 850, reqTool: 'shovel',   haul: true },
           { kind: 'hoard', label: 'Leaning Tower of Pizza Boxes', x: 1140, y: 470,  hp: 2.8, val: 520, reqTool: 'shovel',   haul: true },
-          { kind: 'odor',  label: 'Cat-Pee Tear Gas Cloud',       x: 1520, y: 290,  hp: 4.0, val: 680, reqTool: 'scrubber', requiresCheck: 'No Air Scrubber' },
+          { kind: 'odor',  label: 'Cat-Pee Tear Gas Cloud',       x: 1520, y: 290,  hp: 4.0, val: 680, reqTool: 'clo2', requiresCheck: 'No Air Scrubber' },
           { kind: 'bio',   label: 'Radioactive Hairball Carpet',  x: 450,  y: 800,  hp: 3.4, val: 950, reqTool: 'sprayer' },
           { kind: 'bio',   label: 'Cursed Clawfoot Soup',         x: 920,  y: 960,  hp: 2.2, val: 980, reqTool: 'rags' },
           { kind: 'hoard', label: '1978 QVC Catalog Shrine',      x: 1540, y: 1110, hp: 2.6, val: 560, reqTool: 'shovel',   haul: true },
