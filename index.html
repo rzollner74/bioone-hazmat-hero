@@ -294,11 +294,14 @@
     </div>
     <div class="hud-stats">
       <div class="stat-pill ppe-warn" id="hud-ppe">🦺 PPE: 0/3</div>
+      <div class="stat-pill" id="hud-tools" style="border-color:rgba(255,122,0,0.55);color:#fdba74;">🧰 Tools: 0/5</div>
+      <div class="stat-pill" id="hud-trash" style="display:none;border-color:rgba(57,255,20,0.65);background:rgba(57,255,20,0.16);color:#86efac;">🗑️ HAUL TO GARAGE!</div>
       <div class="stat-pill" id="hud-clean">🧹 Hazards: 0</div>
       <div class="stat-pill" id="hud-osha">⚠️ OSHA: 0</div>
       <div class="stat-pill" id="hud-clients" style="border-color:rgba(232,121,249,0.5);color:#f0abfc;">😰 Clients: 0</div>
       <div class="stat-pill" style="color:#4ade80;" id="hud-score">💵 $0</div>
       <div class="stat-pill" id="hud-timer">⏱ 0:00</div>
+      <button class="stat-pill" id="btn-view-toggle" type="button" style="cursor:pointer; border-color:rgba(0,240,255,0.65); background:rgba(0,240,255,0.16); color:#7dd3fc;">👁️ 3D FP</button>
     </div>
   </div>
 
@@ -320,15 +323,15 @@
       <div style="font-size:46px;">📼🐮☣️🕹️</div>
       <h1>HAZMAT HERO '86</h1>
       <p>
-        Explore a <strong>multi-room 2.5D hoarder house</strong> Zelda-style as <strong>Hank</strong>!
-        Hunt down your missing <strong>PPE</strong>, scrub <strong>biohazards</strong>, fix sneaky <strong>OSHA violations</strong>,
-        talk down <strong>freaking-out clients</strong> with the right response, and dodge <strong>OSHA Gary</strong>!
+        Walk through a <strong>3D First-Person 1980s hoarder house</strong> as <strong>Hank</strong> (or tap <strong>👁️ 3D FP</strong> to switch to Top-Down)!
+        Grab your <strong>PPE</strong>, scrub <strong>biohazards</strong> with Chem 1/2/4, fix <strong>OSHA violations</strong>,
+        calm <strong>freaking-out clients</strong>, and dodge <strong>OSHA Gary, Raccoon Dave, Roachzilla &amp; Adjuster Chad</strong>!
       </p>
-      <button class="btn" id="btn-start">ENTER THE HOUSE →</button>
+      <button class="btn" id="btn-start">ENTER IN 3D FIRST-PERSON →</button>
       <div style="font-size:12px; color:#94a3b8;">
-        Move: <span class="kbd">WASD</span> / <span class="kbd">Arrows</span> &nbsp;·&nbsp;
-        Scrub / Fix / Talk: <span class="kbd">SPACE</span> or <span class="kbd">E</span> &nbsp;·&nbsp;
-        Sprint: <span class="kbd">SHIFT</span>
+        Walk &amp; Turn: <span class="kbd">WASD</span> / <span class="kbd">Arrows</span> &nbsp;·&nbsp;
+        Scrub / Talk: <span class="kbd">SPACE</span> / <span class="kbd">E</span> &nbsp;·&nbsp;
+        Toggle 3D/2D: <span class="kbd">V</span>
       </div>
     </div>
 
@@ -368,7 +371,7 @@
       <span class="kbd">SPACE</span> / <span class="kbd">E</span> Scrub / Fix / Talk to Clients &nbsp;·&nbsp;
       <span class="kbd">SHIFT</span> Sprint
     </div>
-    <div style="color:#93c5fd; font-weight:600;">Minimap: 🔵 PPE · 🟢 Hazard · 🟡 OSHA · 🟣 Client · 🔴 Gary</div>
+    <div style="color:#93c5fd; font-weight:600;">Minimap: 🔵 PPE · 🟠 Tools · 🟩 Dumpster · 🟢 Hazard · 🟡 OSHA · 🟣 Client · 🔴 Enemies</div>
   </div>
 
   <script>
@@ -507,6 +510,15 @@
       { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110 },
     ];
 
+    const TOOL_META = {
+      sprayer:  { name: 'Pump Sprayer',         icon: '🧴' },
+      rags:     { name: 'Microfiber Rags',      icon: '🧻' },
+      shovel:   { name: 'Flat Shovel',          icon: '⛏️' },
+      scrubber: { name: 'HEPA Air Scrubber',    icon: '🌀' },
+      barrier:  { name: 'Negative Air Barrier', icon: '🚧' },
+    };
+    const DUMPSTER = { x: 1755, y: 120, label: 'BIO-ONE DUMPSTER' };
+
     const LEVELS = [
       {
         name: "Job 1: The Hoarder's Split-Level",
@@ -516,14 +528,21 @@
           { kind: 'mask',   label: 'P100 Respirator', x: 1140, y: 200 },
           { kind: 'gloves', label: 'Nitrile Gloves',  x: 180,  y: 800 },
         ],
+        tools: [
+          { kind: 'shovel',   x: 150,  y: 340 },
+          { kind: 'sprayer',  x: 1120, y: 340 },
+          { kind: 'rags',     x: 820,  y: 1080 },
+          { kind: 'scrubber', x: 1480, y: 340 },
+          { kind: 'barrier',  x: 1450, y: 1120 },
+        ],
         hazards: [
-          { kind: 'hoard', label: '1994 Newspapers',  x: 470,  y: 470, hp: 1.0, val: 380 },
-          { kind: 'bio',   label: 'Kitchen Ooze',     x: 760,  y: 490, hp: 1.3, val: 720 },
-          { kind: 'hoard', label: '2003 Tupperware',  x: 1150, y: 490, hp: 1.1, val: 440 },
-          { kind: 'bio',   label: 'Garage Bio-Spill', x: 1580, y: 270, hp: 1.4, val: 850 },
-          { kind: 'odor',  label: 'Bathroom Cloud',   x: 920,  y: 940, hp: 1.2, val: 580 },
-          { kind: 'bio',   label: 'Basement Puddle',  x: 1560, y: 940, hp: 1.5, val: 920 },
-          { kind: 'hoard', label: 'VHS Mountain',     x: 470,  y: 1100, hp: 1.1, val: 420 },
+          { kind: 'hoard', label: '1994 Newspapers',  x: 470,  y: 470,  hp: 2.6, val: 380, reqTool: 'shovel',   haul: true },
+          { kind: 'bio',   label: 'Kitchen Ooze',     x: 760,  y: 490,  hp: 2.8, val: 720, reqTool: 'sprayer' },
+          { kind: 'hoard', label: '2003 Tupperware',  x: 1150, y: 490,  hp: 1.8, val: 440, reqTool: 'rags' },
+          { kind: 'bio',   label: 'Garage Bio-Spill', x: 1580, y: 270,  hp: 3.4, val: 850, reqTool: 'sprayer' },
+          { kind: 'odor',  label: 'Bathroom Cloud',   x: 920,  y: 940,  hp: 3.8, val: 580, reqTool: 'scrubber' },
+          { kind: 'bio',   label: 'Basement Bio-Zone',x: 1560, y: 940,  hp: 4.8, val: 920, reqTool: 'barrier' },
+          { kind: 'hoard', label: 'VHS Mountain',     x: 470,  y: 1100, hp: 3.0, val: 420, reqTool: 'shovel',   haul: true },
         ],
         oshas: [
           { label: '7x Daisy-Chained Cord', fixMsg: 'Unplugged fire hazard!', x: 140,  y: 470,  hp: 1.1, val: 450 },
@@ -534,6 +553,8 @@
         inspectors: [
           { name: 'OSHA Gary', x: 960, y: 500, vx: 95, vy: 70 },
           { name: 'Raccoon Dave', x: 1560, y: 480, vx: -110, vy: 85, isRaccoon: true },
+          { name: 'Roachzilla', x: 880, y: 940, vx: 135, vy: -95, isRoach: true },
+          { name: 'Adjuster Chad', x: 1480, y: 960, vx: -90, vy: -80, isAdjuster: true },
         ],
         clients: [
           {
@@ -627,14 +648,21 @@
           { kind: 'mask',   label: 'P100 Respirator', x: 470,  y: 1090 },
           { kind: 'gloves', label: 'Nitrile Gloves',  x: 1120, y: 1090 },
         ],
+        tools: [
+          { kind: 'shovel',   x: 480,  y: 260 },
+          { kind: 'sprayer',  x: 820,  y: 480 },
+          { kind: 'rags',     x: 180,  y: 780 },
+          { kind: 'scrubber', x: 1450, y: 460 },
+          { kind: 'barrier',  x: 840,  y: 1080 },
+        ],
         hazards: [
-          { kind: 'bio',   label: 'Litter Mountain',    x: 200,  y: 470,  hp: 1.4, val: 850 },
-          { kind: 'hoard', label: '400 Pizza Boxes',    x: 1140, y: 470,  hp: 1.2, val: 520 },
-          { kind: 'odor',  label: 'Mega Ammonia Cloud', x: 1520, y: 290,  hp: 1.3, val: 680 },
-          { kind: 'bio',   label: 'Glowing Carpet',     x: 450,  y: 800,  hp: 1.5, val: 950 },
-          { kind: 'bio',   label: 'Tub Bio-Disaster',   x: 920,  y: 960,  hp: 1.5, val: 980 },
-          { kind: 'hoard', label: '1978 TV Guides',     x: 1540, y: 1110, hp: 1.2, val: 560 },
-          { kind: 'bio',   label: 'Mystery Barrel',     x: 1730, y: 840,  hp: 1.6, val: 1100 },
+          { kind: 'bio',   label: 'Litter Mountain',    x: 200,  y: 470,  hp: 3.2, val: 850, reqTool: 'shovel',   haul: true },
+          { kind: 'hoard', label: '400 Pizza Boxes',    x: 1140, y: 470,  hp: 2.8, val: 520, reqTool: 'shovel',   haul: true },
+          { kind: 'odor',  label: 'Mega Ammonia Cloud', x: 1520, y: 290,  hp: 4.0, val: 680, reqTool: 'scrubber' },
+          { kind: 'bio',   label: 'Glowing Carpet',     x: 450,  y: 800,  hp: 3.4, val: 950, reqTool: 'sprayer' },
+          { kind: 'bio',   label: 'Tub Bio-Disaster',   x: 920,  y: 960,  hp: 2.2, val: 980, reqTool: 'rags' },
+          { kind: 'hoard', label: '1978 TV Guides',     x: 1540, y: 1110, hp: 2.6, val: 560, reqTool: 'shovel',   haul: true },
+          { kind: 'bio',   label: 'Mystery Barrel',     x: 1730, y: 840,  hp: 5.0, val: 1100, reqTool: 'barrier' },
         ],
         oshas: [
           { label: 'Missing SDS Binder',  fixMsg: 'SDS Binder Restocked!',   x: 520,  y: 160,  hp: 1.1, val: 480 },
@@ -647,6 +675,9 @@
           { name: 'OSHA Brenda', x: 1520, y: 880, vx: 105, vy: -95 },
           { name: 'Raccoon Dave', x: 1580, y: 460, vx: -120, vy: 95, isRaccoon: true },
           { name: 'Evil Roomba', x: 460, y: 460, vx: 130, vy: 110, isRoomba: true },
+          { name: 'Roachzilla', x: 920, y: 980, vx: 145, vy: -105, isRoach: true },
+          { name: 'Sir Scratch-a-Lot', x: 320, y: 920, vx: 135, vy: 100, isCat: true },
+          { name: 'Adjuster Chad', x: 1140, y: 240, vx: -95, vy: 85, isAdjuster: true },
         ],
         clients: [
           {
@@ -719,10 +750,11 @@
 
     // ================= GAME STATE =================
     let levelIdx = 0, running = false, score = 0, fines = 0, elapsed = 0;
+    let viewMode = 'fp'; // 'fp' = 3D First-Person, 'top' = 2.5D Top-Down
     let keys = {};
     let joyDx = 0, joyDy = 0, joyMag = 0, touchActing = false;
-    let player = null, walls = [], ppeItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
-    let activeClient = null, talkCooldown = 0;
+    let player = null, walls = [], ppeItems = [], toolItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
+    let activeClient = null, talkCooldown = 0, toolWarnCooldown = 0;
     let particles = [], floaters = [];
     let cam = { x: 0, y: 0 };
     let fineCooldown = 0, scrubSoundCooldown = 0;
@@ -746,11 +778,13 @@
       walls = buildHouseWalls();
       player = {
         x: 160, y: 160, r: 21,
-        facing: 1,
+        facing: 1, angle: 0.48,
         suit: false, mask: false, gloves: false,
+        tools: {}, carryingTrash: false,
         stepPhase: 0, moving: false, scrubbing: false
       };
       ppeItems = L.ppe.map((p) => ({ ...p, taken: false }));
+      toolItems = (L.tools || []).map((t) => ({ ...t, taken: false, label: TOOL_META[t.kind].name, icon: TOOL_META[t.kind].icon }));
       hazards = L.hazards.map((h) => ({ ...h, progress: 0, done: false }));
       oshas = L.oshas.map((o) => ({ ...o, progress: 0, done: false }));
       inspectors = L.inspectors.map((g) => ({ ...g, r: 21, facing: 1, stepPhase: 0, speech: '', speechTimer: 0 }));
@@ -850,6 +884,10 @@
       const ppeEl = document.getElementById('hud-ppe');
       ppeEl.className = 'stat-pill ' + (pc === 3 ? 'ppe-ok' : 'ppe-warn');
       ppeEl.textContent = pc === 3 ? '🦺 PPE: 3/3 (OSHA Proof!)' : `🦺 PPE: ${pc}/3 (${pc === 0 ? 'Crocs Only!' : 'Find More!'})`;
+      const ownedIcons = Object.keys(player.tools || {}).map((k) => TOOL_META[k].icon).join('');
+      const tc = Object.keys(player.tools || {}).length;
+      document.getElementById('hud-tools').textContent = tc ? `🧰 ${tc}/5 ${ownedIcons}` : '🧰 Tools: 0/5';
+      document.getElementById('hud-trash').style.display = player.carryingTrash ? 'inline-flex' : 'none';
       document.getElementById('hud-clean').textContent = `🧹 Hazards: ${hazards.filter((h) => !h.done).length}`;
       document.getElementById('hud-osha').textContent = `⚠️ OSHA: ${oshas.filter((o) => !o.done).length}`;
       const remClients = clients.filter((c) => !c.calmed).length;
@@ -905,23 +943,41 @@
       if (fineCooldown > 0) fineCooldown -= dt;
       if (scrubSoundCooldown > 0) scrubSoundCooldown -= dt;
       if (talkCooldown > 0) talkCooldown -= dt;
+      if (toolWarnCooldown > 0) toolWarnCooldown -= dt;
 
       let dx = 0, dy = 0;
-      if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
-      if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
-      if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
-      if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
-      if (!dx && !dy && (Math.abs(joyDx) > 0.1 || Math.abs(joyDy) > 0.1)) {
-        dx = joyDx; dy = joyDy;
+      if (viewMode === 'fp') {
+        const turnSpeed = 2.6;
+        if (keys['ArrowLeft'] || keys['KeyA']) player.angle -= turnSpeed * dt;
+        if (keys['ArrowRight'] || keys['KeyD']) player.angle += turnSpeed * dt;
+        if (Math.abs(joyDx) > 0.14) player.angle += joyDx * 2.7 * dt;
+
+        let fwd = 0;
+        if (keys['ArrowUp'] || keys['KeyW']) fwd += 1;
+        if (keys['ArrowDown'] || keys['KeyS']) fwd -= 1;
+        if (!fwd && Math.abs(joyDy) > 0.12) fwd = -joyDy;
+
+        if (Math.abs(fwd) > 0.05) {
+          dx = Math.cos(player.angle) * fwd;
+          dy = Math.sin(player.angle) * fwd;
+        }
+      } else {
+        if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
+        if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
+        if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
+        if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
+        if (!dx && !dy && (Math.abs(joyDx) > 0.1 || Math.abs(joyDy) > 0.1)) {
+          dx = joyDx; dy = joyDy;
+        }
       }
 
       player.moving = Boolean(dx || dy);
       if (dx || dy) {
         const len = Math.hypot(dx, dy);
-        dx /= len; dy /= len;
+        if (len > 1) { dx /= len; dy /= len; }
         if (dx !== 0) player.facing = dx > 0 ? 1 : -1;
         const sprinting = keys['ShiftLeft'] || keys['ShiftRight'] || joyMag > 0.85;
-        const speed = sprinting ? 310 : 230;
+        const speed = (sprinting ? 310 : 230) * (player.carryingTrash ? 0.86 : 1);
         const nx = player.x + dx * speed * dt;
         const ny = player.y + dy * speed * dt;
         if (!collidesWall(nx, player.y, player.r)) player.x = nx;
@@ -948,6 +1004,28 @@
           addFloater(p.x, p.y - 20, `${p.isSpare ? 'RE-EQUIPPED' : 'EQUIPPED'} ${p.label.toUpperCase()}! +$${bonus}`, '#7dd3fc');
           if (ppeCount() === 3) addFloater(player.x, player.y - 44, 'FULL PPE! OSHA PROOF! 💪', '#4ade80');
         }
+      }
+
+      // Auto-pickup Bio-One Tools
+      for (const t of toolItems) {
+        if (t.taken) continue;
+        if (Math.hypot(player.x - t.x, player.y - t.y) < 44) {
+          t.taken = true;
+          player.tools[t.kind] = true;
+          score += 100;
+          sfx('pickup');
+          spawnParticles(t.x, t.y, '#ff7a00', 18);
+          addFloater(t.x, t.y - 20, `🧰 GRABBED ${t.label.toUpperCase()}! +$100`, '#fdba74');
+        }
+      }
+
+      // Auto-dump Trash Bag at Garage Bio-One Dumpster!
+      if (player.carryingTrash && Math.hypot(player.x - DUMPSTER.x, player.y - DUMPSTER.y) < 82) {
+        player.carryingTrash = false;
+        score += 250;
+        sfx('clean');
+        spawnParticles(DUMPSTER.x, DUMPSTER.y, '#39ff14', 24);
+        addFloater(DUMPSTER.x, DUMPSTER.y - 24, '🗑️ HAULED TO DUMPSTER! +$250', '#86efac');
       }
 
       // Update touch action button context (TALK vs SCRUB)
@@ -988,9 +1066,22 @@
               sfx('whistle');
               addFloater(player.x, player.y - 36, '🚨 NEED FULL PPE! -$200', '#fca5a5');
             }
+          } else if (!isOsha && target.reqTool && !player.tools[target.reqTool]) {
+            if (toolWarnCooldown <= 0) {
+              toolWarnCooldown = 1.6;
+              const tm = TOOL_META[target.reqTool];
+              sfx('scrub');
+              addFloater(player.x, player.y - 36, `🧰 NEED ${tm.icon} ${tm.name.toUpperCase()}! (🟠 on map)`, '#fdba74');
+            }
+          } else if (!isOsha && target.haul && player.carryingTrash) {
+            if (toolWarnCooldown <= 0) {
+              toolWarnCooldown = 1.6;
+              sfx('scrub');
+              addFloater(player.x, player.y - 36, '🗑️ HANDS FULL! Haul trash to Garage Dumpster!', '#86efac');
+            }
           } else {
             player.scrubbing = true;
-            const rate = ppeCount() === 3 ? 1.2 : 0.85;
+            const rate = ppeCount() === 3 ? 1.15 : 0.85;
             target.progress += dt * rate;
             if (scrubSoundCooldown <= 0) {
               scrubSoundCooldown = 0.085;
@@ -1002,8 +1093,13 @@
               score += target.val;
               sfx('clean');
               spawnParticles(target.x, target.y, '#4ade80', 22);
-              const msg = isOsha ? `✅ ${target.fixMsg} +$${target.val}` : `${CLEAN_QUIPS[Math.floor(Math.random() * CLEAN_QUIPS.length)]} +$${target.val}`;
-              addFloater(target.x, target.y - 18, msg, '#86efac');
+              if (!isOsha && target.haul) {
+                player.carryingTrash = true;
+                addFloater(target.x, target.y - 22, `🗑️ BAGGED! Haul to Garage Dumpster! +$${target.val}`, '#fde047');
+              } else {
+                const msg = isOsha ? `✅ ${target.fixMsg} +$${target.val}` : `${CLEAN_QUIPS[Math.floor(Math.random() * CLEAN_QUIPS.length)]} +$${target.val}`;
+                addFloater(target.x, target.y - 18, msg, '#86efac');
+              }
             }
           }
         }
@@ -1057,6 +1153,27 @@
           } else if (g.isRoomba) {
             fineCooldown = 2.2; g.speech = 'BEEP BOOP CHAOS!'; g.speechTimer = 1.6;
             spawnParticles(g.x, g.y, '#f97316', 12);
+          } else if (g.isRoach) {
+            fineCooldown = 2.2; score = Math.max(0, score - 75);
+            g.speech = 'SKITTER!! GROSS!!'; g.speechTimer = 1.8;
+            sfx('whistle');
+            addFloater(g.x, g.y - 36, '🪳 ROACHZILLA ATTACK! -$75', '#fca5a5');
+          } else if (g.isCat) {
+            fineCooldown = 2.2; score = Math.max(0, score - 100);
+            g.speech = 'HISSSSS!! MY COUCH!'; g.speechTimer = 1.8;
+            sfx('whistle');
+            addFloater(g.x, g.y - 36, '😾 SIR SCRATCH-A-LOT! -$100', '#fde047');
+          } else if (g.isAdjuster) {
+            fineCooldown = 2.6;
+            if (ppeCount() < 3) {
+              score = Math.max(0, score - 175);
+              g.speech = 'CLAIM DENIED!! NO PPE!'; g.speechTimer = 2.2;
+              sfx('whistle');
+              addFloater(g.x, g.y - 40, '💼 CHAD DENIED CLAIM -$175!', '#fca5a5');
+            } else {
+              g.speech = 'Ugh… fine, claim approved.'; g.speechTimer = 2.0;
+              addFloater(g.x, g.y - 36, '💼 Full PPE beat Adjuster Chad!', '#86efac');
+            }
           } else if (ppeCount() < 3) {
             fineCooldown = 2.6; fines += 1; score = Math.max(0, score - 250);
             g.speech = 'SUS!! WHERE IS YOUR PPE?!'; g.speechTimer = 2.2;
@@ -1072,204 +1189,458 @@
       floaters = floaters.filter((f) => { f.y -= 30 * dt; f.life -= dt; return f.life > 0; });
 
       updateHud();
-      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed)) showWin();
+      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed) && !player.carryingTrash) showWin();
     }
 
-    // ================= 1980s RETRO ARCADE CHARACTER RENDERER =================
+    // ================= LIFELIKE 1980s ILLUSTRATED CHARACTER RENDERER =================
     function drawBean(x, y, opts) {
       const { bodyColor, shadeColor, facing = 1, stepPhase = 0, moving = false,
               hasSuit = false, hasMask = false, hasGloves = false,
-              isHank = false, isInspector = false, isClient = false, panicking = false, scrubbing = false } = opts;
+              isHank = false, isInspector = false, isClient = false, panicking = false,
+              scrubbing = false, charName = '' } = opts;
 
       ctx.save();
-      const jitterX = panicking ? Math.sin(elapsed * 42 + x) * 2.5 : 0;
-      const jitterY = panicking ? Math.cos(elapsed * 36 + y) * 1.5 : 0;
+      const jitterX = panicking ? Math.sin(elapsed * 42 + x) * 2.2 : 0;
+      const jitterY = panicking ? Math.cos(elapsed * 36 + y) * 1.4 : 0;
       ctx.translate(x + jitterX, y + jitterY);
 
-      // Soft neon-tinted ground shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.48)';
-      ctx.beginPath(); ctx.ellipse(0, 23, 20, 8, 0, 0, Math.PI * 2); ctx.fill();
+      // Soft multi-layer ground shadow
+      const shGrad = ctx.createRadialGradient(0, 26, 2, 0, 26, 23);
+      shGrad.addColorStop(0, 'rgba(0,0,0,0.52)');
+      shGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = shGrad;
+      ctx.beginPath(); ctx.ellipse(0, 26, 23, 9, 0, 0, Math.PI * 2); ctx.fill();
 
-      const bob = moving ? Math.abs(Math.sin(stepPhase)) * -4.2 : Math.sin(elapsed * 3.5) * 1.1;
-      const legL = moving ? Math.sin(stepPhase) * 6.5 : 0;
-      const legR = moving ? -Math.sin(stepPhase) * 6.5 : 0;
-      const armSwing = panicking ? Math.sin(elapsed * 26) * 8 : (moving ? Math.sin(stepPhase) * 5 : 0);
+      const bob = moving ? Math.abs(Math.sin(stepPhase)) * -3.5 : Math.sin(elapsed * 3.2) * 0.9;
+      const stride = moving ? Math.sin(stepPhase) * 7.5 : 0;
+      const armSwing = panicking ? Math.sin(elapsed * 26) * 7 : (moving ? Math.sin(stepPhase) * 6 : 0);
       ctx.translate(0, bob);
-
       ctx.scale(facing, 1);
-      ctx.lineWidth = 2.8;
-      ctx.strokeStyle = '#090514';
-      ctx.lineJoin = 'round';
 
-      // 1) Back-pack / Ghostbusters-style Proton-Decon Pack (only when Hank has Tyvek suit!)
+      const outline = '#120c1c';
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // Per-client lifelike styling
+      const clientStyle = (() => {
+        if (charName.includes('Dave'))   return { skin: '#f3c6a5', hair: '#6b5b4d', shirt: '#b91c1c', pants: '#334155', plaid: true, beard: true };
+        if (charName.includes('Karen'))  return { skin: '#fbd3b6', hair: '#eab308', shirt: '#ec4899', pants: '#475569', blowout: true, pearls: true };
+        if (charName.includes('Ricky'))  return { skin: '#e8b38c', hair: '#3b2416', shirt: '#06b6d4', pants: '#1e293b', cap: true };
+        if (charName.includes('Gladys')) return { skin: '#f7d5bc', hair: '#cbd5e1', shirt: '#a855f7', pants: '#581c87', bun: true, glasses: true };
+        if (charName.includes('Carl'))   return { skin: '#f0bfa0', hair: '#574337', shirt: '#f1f5f9', pants: '#334155', tie: '#dc2626', sweaty: true };
+        return { skin: '#f3c6a5', hair: shadeColor, shirt: bodyColor, pants: '#334155' };
+      })();
+      const isBrenda = charName.includes('Brenda');
+
+      // 1) Back-pack / Detailed Bio-One Proton-Decon Pack (when Hank has Tyvek suit)
       if (isHank && hasSuit) {
-        ctx.fillStyle = '#334155';
-        roundRect(-22, -8, 11, 20, 3); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#00f0ff';
-        ctx.fillRect(-20, -4, 4, 4);
-        ctx.fillStyle = '#ff2e97';
-        ctx.fillRect(-20, 3, 4, 4);
+        const pkG = ctx.createLinearGradient(-22, -12, -10, 12);
+        pkG.addColorStop(0, '#64748b'); pkG.addColorStop(1, '#1e293b');
+        ctx.fillStyle = pkG; ctx.strokeStyle = outline; ctx.lineWidth = 2.2;
+        roundRect(-21, -10, 11, 21, 3.5); ctx.fill(); ctx.stroke();
+        // Pressure gauge & neon indicator LEDs
+        ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-15.5, -4, 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#00f0ff'; ctx.beginPath(); ctx.arc(-15.5, -4, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ff7a00'; ctx.fillRect(-18.5, 3, 6, 4);
       }
 
-      // 2) Legs & 80s High-Top Sneakers / Hazmat Boots
-      ctx.fillStyle = isHank ? (hasSuit ? '#e2e8f0' : '#1e3a8a') : (isInspector ? '#1f2937' : shadeColor);
-      roundRect(-10, 8 + legL * 0.4, 8, 12, 3); ctx.fill(); ctx.stroke();
-      roundRect(2, 8 + legR * 0.4, 8, 12, 3); ctx.fill(); ctx.stroke();
-      // High-top sneakers (white with neon stripe!)
-      ctx.fillStyle = isHank && hasSuit ? '#ff7a00' : '#f8fafc';
-      roundRect(-11, 16 + legL * 0.4, 11, 6, 3); ctx.fill(); ctx.stroke();
-      roundRect(1, 16 + legR * 0.4, 11, 6, 3); ctx.fill(); ctx.stroke();
+      // 2) Realistic Articulated Legs + Boots/Sneakers
+      const pantsColor = isHank ? (hasSuit ? '#e2e8f0' : '#1d4ed8') : (isInspector ? '#1e293b' : clientStyle.pants);
+      const bootColor = isHank ? (hasSuit ? '#1e293b' : '#451a03') : (isInspector ? '#0f172a' : '#f8fafc');
+      ctx.lineWidth = 2.2; ctx.strokeStyle = outline;
 
-      // 3) Distinct 80s Torso (Windbreaker / Bio-One Jumpsuit / Power Suit / Tracksuit)
-      const torsoFill = isHank ? (hasSuit ? '#f8fafc' : '#0ea5e9') : (isInspector ? '#dc2626' : bodyColor);
-      ctx.fillStyle = torsoFill;
-      // Wide 80s shoulder-pad jacket silhouette
-      roundRect(-15, -8, 30, 21, 7); ctx.fill(); ctx.stroke();
+      // Back leg
+      ctx.fillStyle = pantsColor;
+      roundRect(-7 - stride * 0.35, 7, 7.5, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = bootColor;
+      roundRect(-8 - stride * 0.35, 18, 10, 5.5, 2.5); ctx.fill(); ctx.stroke();
+      // Front leg
+      ctx.fillStyle = pantsColor;
+      roundRect(1 + stride * 0.35, 7, 7.5, 14, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = bootColor;
+      roundRect(0.5 + stride * 0.35, 18, 10.5, 5.5, 2.5); ctx.fill(); ctx.stroke();
+      // Sole highlight
+      ctx.fillStyle = isHank && hasSuit ? '#ff7a00' : '#94a3b8';
+      ctx.fillRect(1.5 + stride * 0.35, 22, 8.5, 1.8);
 
+      // 3) Back Arm (behind torso)
+      const jacketBase = isHank ? (hasSuit ? '#f8fafc' : '#0284c7') : (isInspector ? '#334155' : clientStyle.shirt);
+      const handColor = (isHank && hasGloves) ? '#38bdf8' : (isHank ? '#c26026' : (isInspector ? '#f1c29b' : clientStyle.skin));
+      ctx.fillStyle = jacketBase;
+      if (panicking) {
+        roundRect(-17, -23 + armSwing * 0.35, 6.5, 16, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = handColor;
+        ctx.beginPath(); ctx.arc(-13.8, -24 + armSwing * 0.35, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else {
+        roundRect(-16, -6 - armSwing * 0.4, 6.5, 15, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = handColor;
+        ctx.beginPath(); ctx.arc(-12.8, 9 - armSwing * 0.4, 3.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+
+      // 4) Sculpted Tapered Torso with 3D Shading & Clothing Detail
+      const tGrad = ctx.createLinearGradient(-13, -10, 13, 12);
+      tGrad.addColorStop(0, jacketBase);
+      tGrad.addColorStop(1, isHank && hasSuit ? '#cbd5e1' : (isInspector ? '#0f172a' : shadeColor));
+      ctx.fillStyle = tGrad;
+      ctx.beginPath();
+      ctx.moveTo(-12.5, -9);
+      ctx.quadraticCurveTo(0, -12, 12.5, -9);
+      ctx.lineTo(10.5, 10);
+      ctx.quadraticCurveTo(0, 12.5, -10.5, 10);
+      ctx.closePath();
+      ctx.fill(); ctx.stroke();
+
+      // Clothing details
       if (isHank) {
         if (hasSuit) {
-          // Ghostbusters-style Bio-One orange utility belt + stripe
-          ctx.fillStyle = '#ff7a00';
-          ctx.fillRect(-14, 5, 28, 4.5);
-          ctx.strokeRect(-14, 5, 28, 4.5);
-          ctx.fillStyle = '#00f0ff';
-          ctx.beginPath(); ctx.arc(5, -1, 3.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          // Center Tyvek zipper + fabric creases
+          ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(2, -9); ctx.lineTo(2, 9); ctx.stroke();
+          // Utility belt & Bio-One orange chest patch
+          ctx.fillStyle = '#f97316'; ctx.strokeStyle = outline; ctx.lineWidth = 1.6;
+          ctx.fillRect(-10.5, 4.5, 21, 4); ctx.strokeRect(-10.5, 4.5, 21, 4);
+          ctx.fillStyle = '#facc15'; ctx.fillRect(0, 5, 4.5, 3);
+          ctx.fillStyle = '#f97316';
+          ctx.beginPath(); ctx.arc(6.5, -2.5, 3.2, 0, Math.PI * 2); ctx.fill();
         } else {
-          // 80s neon windbreaker diagonal stripes (hot pink + yellow!)
-          ctx.fillStyle = '#ff2e97';
-          ctx.fillRect(-13, -3, 26, 4.5);
-          ctx.fillStyle = '#ffe600';
-          ctx.fillRect(-13, 2, 26, 3.5);
+          // 80s retro bomber/windbreaker over Bio-One tee
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(-2, -9, 7, 18);
+          ctx.fillStyle = '#ff2e97'; ctx.fillRect(-11, -2, 8.5, 3.2);
+          ctx.fillStyle = '#ffe600'; ctx.fillRect(-11, 1.5, 8.5, 2.5);
+          ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(1.5, -1, 2.5, 0, Math.PI * 2); ctx.fill();
         }
       } else if (isInspector) {
-        // 80s Power Suit lapel + yellow tie
+        // Tailored white shirt V + red/yellow power tie + badge
         ctx.fillStyle = '#f8fafc';
-        ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(7, -8); ctx.lineTo(3, 6); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = '#ffe600';
-        ctx.fillRect(1.5, -7, 3, 12);
+        ctx.beginPath(); ctx.moveTo(-2, -9.5); ctx.lineTo(7, -9.5); ctx.lineTo(2.5, 5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = isBrenda ? '#ec4899' : '#ef4444';
+        ctx.beginPath(); ctx.moveTo(1.5, -8.5); ctx.lineTo(4, -8.5); ctx.lineTo(3.4, 5.5); ctx.lineTo(2, 5.5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#facc15'; ctx.fillRect(-7.5, -4, 4, 3);
       } else if (isClient) {
-        // 80s neon tracksuit V-stripe
-        ctx.fillStyle = '#00f0ff';
-        ctx.fillRect(-13, -1, 26, 4);
-        ctx.fillStyle = '#ffe600';
-        ctx.fillRect(-13, 4, 26, 2.5);
-      }
-
-      // 4) Animated Arms (flailing up when client panics, holding spray wand when Hank scrubs!)
-      ctx.fillStyle = torsoFill;
-      if (panicking) {
-        // Arms thrown up in classic 80s cartoon panic!
-        roundRect(-21, -22 + armSwing * 0.4, 7, 16, 3.5); ctx.fill(); ctx.stroke();
-        roundRect(14, -22 - armSwing * 0.4, 7, 16, 3.5); ctx.fill(); ctx.stroke();
-      } else {
-        roundRect(-19, -5 - armSwing * 0.4, 7, 14, 3.5); ctx.fill(); ctx.stroke();
-        const sw = scrubbing ? Math.sin(elapsed * 28) * 5 : 0;
-        roundRect(12 + sw * 0.5, -5 + armSwing * 0.4, 7, 14, 3.5); ctx.fill(); ctx.stroke();
-        if (isHank && hasGloves) {
-          ctx.fillStyle = '#00f0ff';
-          ctx.beginPath(); ctx.arc(16 + sw, 8, 4.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          if (scrubbing) {
-            // Neon Decon Spray Wand!
-            ctx.fillStyle = '#ff7a00';
-            roundRect(19 + sw, -2, 11, 7, 2.5); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#39ff14';
-            ctx.fillRect(28 + sw, 0, 5, 3);
-          }
+        if (clientStyle.plaid) {
+          ctx.strokeStyle = 'rgba(15,23,42,0.45)'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(10, -2); ctx.moveTo(-10, 4); ctx.lineTo(10, 4);
+          ctx.moveTo(-3, -9); ctx.lineTo(-3, 10); ctx.moveTo(4, -9); ctx.lineTo(4, 10); ctx.stroke();
+        } else if (clientStyle.pearls) {
+          ctx.fillStyle = '#f8fafc';
+          for (let px = -5; px <= 7; px += 3) { ctx.beginPath(); ctx.arc(px, -7.5, 1.5, 0, Math.PI * 2); ctx.fill(); }
+        } else if (clientStyle.tie) {
+          ctx.fillStyle = clientStyle.tie; ctx.fillRect(1, -8, 3, 14);
         }
       }
 
-      // 5) Distinct Round Cartoon Head!
-      const skinColor = isHank ? '#d96b27' : '#fed7aa';
-      ctx.fillStyle = skinColor;
-      ctx.beginPath(); ctx.arc(0, -19, 13.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // 5) Neck + Sculpted Head with Ear & Realistic Skin Shading
+      const skinBase = isHank ? '#d46a28' : (isInspector ? '#f1c29b' : clientStyle.skin);
+      ctx.strokeStyle = outline; ctx.lineWidth = 2.1;
+      ctx.fillStyle = skinBase;
+      ctx.fillRect(-3.5, -13, 7, 5);
 
-      // 6) Face, 80s Shades, Respirator, Hair & Horns
+      const headG = ctx.createRadialGradient(3, -24, 2, 0, -21, 13.5);
+      headG.addColorStop(0, isHank ? '#e8823c' : '#ffe3cc');
+      headG.addColorStop(1, skinBase);
+      ctx.fillStyle = headG;
+      ctx.beginPath(); ctx.ellipse(0, -21.5, 11.5, 12.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Ear
+      ctx.fillStyle = skinBase;
+      ctx.beginPath(); ctx.arc(-10.5, -20.5, 3, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+      // 6) Detailed Face, Eyes, Hair, Horns & Gear
       if (isHank) {
-        // Highland Cow Horns
-        ctx.strokeStyle = '#090514'; ctx.lineWidth = 6; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(-9, -27); ctx.quadraticCurveTo(-21, -35, -14, -42); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(9, -27); ctx.quadraticCurveTo(21, -35, 14, -42); ctx.stroke();
-        ctx.strokeStyle = '#f3d5b5'; ctx.lineWidth = 3.2;
-        ctx.beginPath(); ctx.moveTo(-9, -27); ctx.quadraticCurveTo(-21, -35, -14, -42); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(9, -27); ctx.quadraticCurveTo(21, -35, 14, -42); ctx.stroke();
-        ctx.lineWidth = 2.6; ctx.strokeStyle = '#090514';
+        // Sculpted curved Highland Cow horns with bone gradient
+        ctx.strokeStyle = outline; ctx.lineWidth = 5.4;
+        ctx.beginPath(); ctx.moveTo(-8, -29); ctx.quadraticCurveTo(-20, -37, -14, -44); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(8, -29); ctx.quadraticCurveTo(20, -37, 14, -44); ctx.stroke();
+        ctx.strokeStyle = '#efe0c8'; ctx.lineWidth = 2.8;
+        ctx.beginPath(); ctx.moveTo(-8, -29); ctx.quadraticCurveTo(-20, -37, -14, -44); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(8, -29); ctx.quadraticCurveTo(20, -37, 14, -44); ctx.stroke();
 
-        // 80s Neon Sweatband (when not in full suit) + wild shaggy 80s rockstar hair
+        // Shaggy layered Highland bangs + optional 80s sweatband
+        ctx.strokeStyle = outline; ctx.lineWidth = 2;
         if (!hasSuit) {
           ctx.fillStyle = '#ff2e97';
-          roundRect(-13, -28, 26, 5, 2.5); ctx.fill(); ctx.stroke();
+          roundRect(-11.5, -30, 23, 4.2, 2); ctx.fill(); ctx.stroke();
         }
-        ctx.fillStyle = '#ea580c';
-        ctx.beginPath(); ctx.ellipse(0, -30, 12, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#c2410c';
+        ctx.beginPath();
+        ctx.ellipse(-4, -31.5, 7, 4.5, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(4, -32, 7.5, 4.8, 0.2, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
 
-        // 80s Neon Mirror Shades!
-        ctx.fillStyle = '#0f172a';
-        roundRect(-4, -23, 17, 6.5, 2.5); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#00f0ff';
-        ctx.fillRect(-2, -21.5, 6, 3.2);
-        ctx.fillStyle = '#ff2e97';
-        ctx.fillRect(5.5, -21.5, 6, 3.2);
-
-        // P100 Respirator Mask (when equipped!)
+        // Expressive eyes or safety goggles + 3M P100 Respirator
         if (hasMask) {
+          // Clear tinted safety goggles
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.72)';
+          roundRect(-3, -25.5, 15, 6.2, 2.5); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = 'rgba(255,255,255,0.65)'; ctx.fillRect(0, -24.2, 6, 1.8);
+          // 3M Dual-cartridge P100 half-face respirator
           ctx.fillStyle = '#334155';
-          roundRect(0, -16, 13, 9, 4); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#ffe600';
-          ctx.beginPath(); ctx.arc(13, -11, 4.4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.beginPath(); ctx.arc(0, -11, 3.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          roundRect(0.5, -19, 11.5, 8.5, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath(); ctx.arc(12.2, -14.2, 4.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, -14.2, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         } else {
-          // Cute Highland cow snout
-          ctx.fillStyle = '#f59e0b';
-          roundRect(1, -15, 11, 6, 3); ctx.fill(); ctx.stroke();
+          // Expressive Highland Cow eyes + friendly snout
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.ellipse(2, -22.5, 2.6, 3, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.ellipse(8.5, -22.5, 2.6, 3, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#111827';
+          ctx.beginPath(); ctx.arc(2.8, -22.5, 1.4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(9.3, -22.5, 1.4, 0, Math.PI * 2); ctx.fill();
+          // Warm Highland snout with nostrils & smile
+          ctx.fillStyle = '#f3b07c';
+          roundRect(0.5, -18, 11, 6.5, 3.2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#7c2d12';
+          ctx.beginPath(); ctx.arc(4, -15.5, 1.1, 0, Math.PI * 2); ctx.arc(8.2, -15.5, 1.1, 0, Math.PI * 2); ctx.fill();
         }
       } else if (isInspector) {
-        // Aviator sunglasses + grumpy 80s mustache
-        ctx.fillStyle = '#111827';
-        roundRect(-3, -23, 15, 5.5, 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#78350f';
-        roundRect(0, -15, 10, 3.5, 1.5); ctx.fill();
-        // Yellow OSHA Hard Hat
-        ctx.fillStyle = '#ffe600';
-        ctx.beginPath(); ctx.arc(0, -25, 14, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-        roundRect(-16, -26, 32, 4.5, 2); ctx.fill(); ctx.stroke();
-        // Clipboard
-        ctx.fillStyle = '#b45309';
-        roundRect(14, -4, 10, 14, 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#f8fafc'; ctx.fillRect(16, -1, 6, 9);
-      } else if (isClient) {
-        // Big 80s crimped hair / perm!
-        ctx.fillStyle = shadeColor;
-        ctx.beginPath();
-        ctx.arc(-6, -29, 8.5, 0, Math.PI * 2);
-        ctx.arc(4, -31, 9, 0, Math.PI * 2);
-        ctx.arc(10, -26, 6.5, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
-        if (panicking) {
-          // Wide freaked-out eyes + screaming mouth
-          ctx.fillStyle = '#fff';
-          ctx.beginPath(); ctx.arc(2, -20, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.beginPath(); ctx.arc(10, -20, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#090514';
-          ctx.beginPath(); ctx.arc(2.6, -20, 1.4, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.arc(10.6, -20, 1.4, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ff3355';
-          ctx.beginPath(); ctx.ellipse(6, -13.5, 3.8, 3, 0, 0, Math.PI * 2); ctx.fill();
-          // Flying panic sweat drops
-          ctx.fillStyle = '#00f0ff';
-          const dropY = (elapsed * 22) % 10;
-          ctx.beginPath(); ctx.arc(-16, -28 - dropY * 0.5, 3, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.arc(19, -30 - dropY * 0.5, 2.8, 0, Math.PI * 2); ctx.fill();
+        // Hair under hard hat
+        if (isBrenda) {
+          ctx.fillStyle = '#7c2d12';
+          roundRect(-12, -26, 7, 13, 3); ctx.fill(); ctx.stroke();
+        }
+        // Stern furrowed eyebrows + aviator glasses
+        ctx.fillStyle = '#0f172a';
+        roundRect(-1.5, -24.5, 6, 4.5, 1.8); ctx.fill(); ctx.stroke();
+        roundRect(5.5, -24.5, 6, 4.5, 1.8); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = 'rgba(56,189,248,0.45)';
+        ctx.fillRect(0, -23.5, 3.5, 1.5); ctx.fillRect(7, -23.5, 3.5, 1.5);
+        // Mustache for Gary, lipstick for Brenda
+        if (isBrenda) {
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath(); ctx.ellipse(6, -15, 3, 1.4, 0, 0, Math.PI * 2); ctx.fill();
         } else {
-          // Chill 80s shades & smile!
+          ctx.fillStyle = '#5c3a21';
+          roundRect(1, -17, 9, 3, 1.4); ctx.fill();
+        }
+        // 3D Glossy OSHA Hard Hat
+        const hatG = ctx.createLinearGradient(-12, -36, 12, -26);
+        hatG.addColorStop(0, '#fef08a'); hatG.addColorStop(1, '#eab308');
+        ctx.fillStyle = hatG;
+        ctx.beginPath(); ctx.arc(0, -27.5, 12.5, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        roundRect(-14.5, -28.5, 29, 4, 2); ctx.fill(); ctx.stroke();
+      } else if (isClient) {
+        // Unique lifelike hair per client
+        ctx.fillStyle = clientStyle.hair;
+        if (clientStyle.blowout) {
+          ctx.beginPath();
+          ctx.arc(-8, -28, 7.5, 0, Math.PI * 2);
+          ctx.arc(0, -32.5, 8.5, 0, Math.PI * 2);
+          ctx.arc(8, -29, 6.5, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        } else if (clientStyle.bun) {
+          ctx.beginPath(); ctx.arc(-4, -35.5, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, -26, 11.5, Math.PI * 1.05, -0.05); ctx.closePath(); ctx.fill(); ctx.stroke();
+        } else if (clientStyle.cap) {
+          ctx.fillStyle = '#0ea5e9';
+          ctx.beginPath(); ctx.arc(0, -26.5, 11.5, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+          roundRect(-16, -27.5, 12, 3.8, 1.8); ctx.fill(); ctx.stroke(); // Backwards brim!
+        } else {
+          ctx.beginPath(); ctx.arc(0, -26.5, 11.8, Math.PI * 1.05, -0.05); ctx.closePath(); ctx.fill(); ctx.stroke();
+        }
+        if (clientStyle.beard) {
+          ctx.fillStyle = 'rgba(92,74,61,0.45)';
+          ctx.beginPath(); ctx.arc(4, -14, 6, 0.1 * Math.PI, 0.9 * Math.PI); ctx.fill();
+        }
+        if (panicking) {
+          // Expressive wide eyes + raised panic brows + open mouth
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.ellipse(2, -21.5, 3, 3.4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.ellipse(8.5, -21.5, 3, 3.4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#090514';
+          ctx.beginPath(); ctx.arc(2.5, -21.5, 1.2, 0, Math.PI * 2); ctx.arc(9, -21.5, 1.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#dc2626';
+          ctx.beginPath(); ctx.ellipse(5.5, -14.5, 3.6, 2.8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          // Flying sweat drops
+          ctx.fillStyle = '#38bdf8';
+          const dropY = (elapsed * 22) % 10;
+          ctx.beginPath(); ctx.arc(-15, -28 - dropY * 0.5, 2.6, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(17, -30 - dropY * 0.5, 2.4, 0, Math.PI * 2); ctx.fill();
+        } else {
+          // Calm happy eyes & warm smile
           ctx.fillStyle = '#111827';
-          roundRect(-2, -23, 14, 5, 2); ctx.fill(); ctx.stroke();
-          ctx.strokeStyle = '#090514'; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.arc(6, -15, 3.8, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+          ctx.beginPath(); ctx.arc(2.5, -21.5, 1.6, 0, Math.PI * 2); ctx.arc(8.5, -21.5, 1.6, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#7c2d12'; ctx.lineWidth = 1.8;
+          ctx.beginPath(); ctx.arc(5.5, -16.5, 3.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+        }
+      }
+
+      // 7) Front Arm + Hand / Clipboard / Decon Spray Wand
+      ctx.strokeStyle = outline; ctx.lineWidth = 2.1;
+      if (panicking) {
+        ctx.fillStyle = jacketBase;
+        roundRect(10.5, -23 - armSwing * 0.35, 6.5, 16, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = handColor;
+        ctx.beginPath(); ctx.arc(13.8, -24 - armSwing * 0.35, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else {
+        const sw = scrubbing ? Math.sin(elapsed * 28) * 5.5 : 0;
+        ctx.fillStyle = jacketBase;
+        roundRect(9.5 + sw * 0.4, -6 + armSwing * 0.4, 6.5, 15, 3); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = handColor;
+        ctx.beginPath(); ctx.arc(13 + sw * 0.6, 9 + armSwing * 0.4, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+        if (isInspector) {
+          // Wooden clipboard with red-checked OSHA sheet
+          ctx.fillStyle = '#b45309';
+          roundRect(12, -4, 10, 14, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f8fafc'; ctx.fillRect(13.8, -1.5, 6.4, 9.5);
+          ctx.fillStyle = '#ef4444'; ctx.fillRect(15, 0.5, 4, 1.4); ctx.fillRect(15, 3.5, 4, 1.4);
+        } else if (isHank && scrubbing) {
+          // Bio-One Stainless Pressure Sprayer Wand!
+          ctx.fillStyle = '#f97316';
+          roundRect(15 + sw, 3, 12, 5.5, 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#38bdf8';
+          ctx.fillRect(26 + sw, 4.5, 6, 2.5);
         }
       }
 
       ctx.restore();
     }
+
+
+    // ================= LIFELIKE HAND-DRAWN RACCOON DAVE & 3D ROOMBA =================
+    function drawRaccoon(g) {
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.scale(g.facing || 1, 1);
+      const bob = Math.abs(Math.sin(g.stepPhase * 1.3)) * -3.5;
+      const tailWag = Math.sin(elapsed * 12) * 0.25;
+      // Ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.ellipse(0, 17, 19, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(0, bob);
+      ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2.2;
+
+      // Striped fluffy tail wagging behind!
+      ctx.save();
+      ctx.translate(-12, 4); ctx.rotate(tailWag);
+      ctx.fillStyle = '#94a3b8';
+      ctx.beginPath(); ctx.ellipse(-10, -2, 11, 5.5, -0.35, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(-15, -5.5, 3.5, 8); ctx.fillRect(-8, -4.5, 3.5, 8);
+      ctx.restore();
+
+      // Fuzzy gray-brown body
+      const bGrad = ctx.createRadialGradient(2, 0, 2, 0, 2, 15);
+      bGrad.addColorStop(0, '#9ca3af'); bGrad.addColorStop(1, '#4b5563');
+      ctx.fillStyle = bGrad;
+      ctx.beginPath(); ctx.ellipse(0, 3, 13.5, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Little scampering paws
+      ctx.fillStyle = '#1e293b';
+      const paw = Math.sin(g.stepPhase * 1.4) * 3;
+      ctx.beginPath(); ctx.arc(-6 + paw, 13, 3.5, 0, Math.PI * 2); ctx.arc(6 - paw, 13, 3.5, 0, Math.PI * 2); ctx.fill();
+
+      // Pointy ears + round head
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath(); ctx.moveTo(-7, -11); ctx.lineTo(-10, -20); ctx.lineTo(-2, -14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(5, -11); ctx.lineTo(10, -20); ctx.lineTo(11, -11); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.beginPath(); ctx.ellipse(3, -8, 11, 9.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+      // Iconic dark bandit eye mask + mischievous eyes + snout!
+      ctx.fillStyle = '#1e293b';
+      roundRect(-3, -12, 16, 6.2, 3); ctx.fill();
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath(); ctx.arc(2.5, -9, 1.8, 0, Math.PI * 2); ctx.arc(9.5, -9, 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath(); ctx.ellipse(9, -3.5, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(13, -4, 2, 0, Math.PI * 2); ctx.fill();
+
+      // Stolen PPE loot clutched in paws!
+      if (g.stolenLoot) {
+        ctx.font = '15px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(g.stolenLoot === 'suit' ? '🥼' : g.stolenLoot === 'mask' ? '😷' : '🧤', 16, 4);
+      }
+      ctx.restore();
+    }
+
+
+    function drawRoomba(g) {
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.ellipse(0, 14, 20, 8, 0, 0, Math.PI * 2); ctx.fill();
+      // Spinning side brush
+      ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+      for (let i = 0; i < 3; i++) {
+        const a = elapsed * 14 + i * (Math.PI * 2 / 3);
+        ctx.beginPath(); ctx.moveTo(14, 5); ctx.lineTo(14 + Math.cos(a) * 9, 5 + Math.sin(a) * 5); ctx.stroke();
+      }
+      // 3D glossy metallic vacuum body
+      const rGrad = ctx.createRadialGradient(-5, -5, 2, 0, 0, 20);
+      rGrad.addColorStop(0, '#475569'); rGrad.addColorStop(1, '#0f172a');
+      ctx.fillStyle = rGrad; ctx.strokeStyle = '#090514'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(0, 2, 19, 14, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Glowing red evil LED ring & angry eyebrows
+      ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 10, 7, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#ff3355';
+      ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+
+    function drawRoach(g) {
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.scale(g.facing || 1, 1);
+      const wiggle = Math.sin(elapsed * 28) * 3;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(0, 14, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+      // Scuttling legs
+      ctx.strokeStyle = '#451a03'; ctx.lineWidth = 2.2;
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath(); ctx.moveTo(i * 7, 2); ctx.lineTo(i * 11, 12 + (i % 2 ? wiggle : -wiggle)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(i * 7, -4); ctx.lineTo(i * 10, -13 - (i % 2 ? wiggle : -wiggle)); ctx.stroke();
+      }
+      // Glossy brown segmented carapace
+      const cG = ctx.createRadialGradient(2, -4, 2, 0, 0, 18);
+      cG.addColorStop(0, '#92400e'); cG.addColorStop(1, '#451a03');
+      ctx.fillStyle = cG; ctx.strokeStyle = '#090514'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Glowing green radioactive eyes + twitching antennae
+      ctx.fillStyle = '#39ff14';
+      ctx.beginPath(); ctx.arc(13, -3, 2.2, 0, Math.PI * 2); ctx.arc(13, 3, 2.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.moveTo(16, -3); ctx.quadraticCurveTo(26, -12 + wiggle, 30, -8);
+      ctx.moveTo(16, 3); ctx.quadraticCurveTo(26, 12 - wiggle, 30, 8);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+
+    function drawCat(g) {
+      ctx.save();
+      ctx.translate(g.x, g.y);
+      ctx.scale(g.facing || 1, 1);
+      const bob = Math.abs(Math.sin(g.stepPhase * 1.4)) * -4;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(0, 16, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.translate(0, bob);
+      ctx.strokeStyle = '#090514'; ctx.lineWidth = 2.2;
+      // Puffed angry tail
+      ctx.strokeStyle = '#ea580c'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(-10, 2); ctx.quadraticCurveTo(-24, -10, -16, -20); ctx.stroke();
+      // Orange tabby body + head
+      ctx.strokeStyle = '#090514'; ctx.lineWidth = 2.2;
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.ellipse(0, 4, 13, 10, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Pointy ears
+      ctx.beginPath(); ctx.moveTo(-4, -11); ctx.lineTo(-6, -22); ctx.lineTo(2, -14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(5, -11); ctx.lineTo(11, -22); ctx.lineTo(12, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(4, -7, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      // Angry slit eyes + hissing mouth
+      ctx.fillStyle = '#fde047';
+      ctx.beginPath(); ctx.arc(2, -8, 2.5, 0, Math.PI * 2); ctx.arc(9, -8, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#090514';
+      ctx.fillRect(1.5, -10, 1.2, 4); ctx.fillRect(8.5, -10, 1.2, 4);
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(6, -3, 2.6, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
 
     function roundRect(x, y, w, h, r) {
       ctx.beginPath();
@@ -1313,6 +1684,12 @@
             ctx.beginPath(); ctx.moveTo(rm.x, y); ctx.lineTo(rm.x + rm.w, y); ctx.stroke();
           }
         }
+        // Warm overhead room lighting pool!
+        const lGrad = ctx.createRadialGradient(rm.x + rm.w / 2, rm.y + rm.h / 2, 20, rm.x + rm.w / 2, rm.y + rm.h / 2, Math.max(rm.w, rm.h) * 0.6);
+        lGrad.addColorStop(0, 'rgba(255, 236, 185, 0.11)');
+        lGrad.addColorStop(1, 'rgba(0, 0, 0, 0.22)');
+        ctx.fillStyle = lGrad;
+        ctx.fillRect(rm.x, rm.y, rm.w, rm.h);
         // Subtle room floor watermark label
         ctx.font = '800 18px sans-serif';
         ctx.fillStyle = 'rgba(255,255,255,0.06)';
@@ -1320,41 +1697,77 @@
         ctx.fillText(rm.name.toUpperCase(), rm.x + rm.w / 2, rm.y + rm.h / 2);
       }
 
-      // 2) Furniture Props (2.5D shaded!)
+      // 2) Furniture Props (Detailed 2.5D shaded!)
       for (const p of HOUSE_PROPS) {
         ctx.save();
         if (p.type === 'rug') {
           ctx.fillStyle = p.color;
           roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill();
-          ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 3;
           roundRect(p.x + 10, p.y + 10, p.w - 20, p.h - 20, 8); ctx.stroke();
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.22)'; ctx.lineWidth = 2;
+          roundRect(p.x + 18, p.y + 18, p.w - 36, p.h - 36, 5); ctx.stroke();
         } else if (p.type === 'couch') {
-          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 10, p.w, p.h, 12); ctx.fill();
-          ctx.fillStyle = '#475569'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillStyle = 'rgba(0,0,0,0.4)'; roundRect(p.x + 6, p.y + 12, p.w, p.h, 12); ctx.fill();
+          ctx.fillStyle = '#5b3a29'; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.6;
           roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#64748b';
-          roundRect(p.x + 14, p.y + 12, p.w - 28, p.h - 20, 8); ctx.fill(); ctx.stroke();
+          // 3 plush cushions + armrests
+          ctx.fillStyle = '#7c4f38';
+          const cw = (p.w - 36) / 3;
+          for (let i = 0; i < 3; i++) {
+            roundRect(p.x + 18 + i * cw, p.y + 16, cw - 4, p.h - 24, 7); ctx.fill(); ctx.stroke();
+          }
+          ctx.fillStyle = '#4a2e20';
+          roundRect(p.x + 3, p.y + 8, 13, p.h - 14, 5); ctx.fill(); ctx.stroke();
+          roundRect(p.x + p.w - 16, p.y + 8, 13, p.h - 14, 5); ctx.fill(); ctx.stroke();
+        } else if (p.type === 'tv') {
+          // 1980s Wood-Cabinet CRT TV with glowing retro screen!
+          ctx.fillStyle = 'rgba(0,0,0,0.4)'; roundRect(p.x + 5, p.y + 8, p.w, p.h, 6); ctx.fill();
+          ctx.fillStyle = '#5c3a21'; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.6;
+          roundRect(p.x, p.y, p.w, p.h, 6); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#0ea5e9';
+          roundRect(p.x + 12, p.y + 6, p.w - 42, p.h - 12, 4); ctx.fill(); ctx.stroke();
+          // Glowing retro color bars
+          const cols = ['#f8fafc', '#fde047', '#00f0ff', '#22c55e', '#ec4899'];
+          const bw = (p.w - 46) / cols.length;
+          cols.forEach((col, idx) => { ctx.fillStyle = col; ctx.fillRect(p.x + 14 + idx * bw, p.y + 8, bw, p.h - 16); });
+          // Dial knobs
+          ctx.fillStyle = '#cbd5e1';
+          ctx.beginPath(); ctx.arc(p.x + p.w - 15, p.y + 14, 4, 0, Math.PI * 2); ctx.arc(p.x + p.w - 15, p.y + 28, 4, 0, Math.PI * 2); ctx.fill();
         } else if (p.type === 'bed') {
-          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 10, p.w, p.h, 10); ctx.fill();
-          ctx.fillStyle = '#1e3a8a'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillStyle = 'rgba(0,0,0,0.4)'; roundRect(p.x + 6, p.y + 10, p.w, p.h, 10); ctx.fill();
+          ctx.fillStyle = '#5c3a21'; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.6;
           roundRect(p.x, p.y, p.w, p.h, 10); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#e2e8f0';
-          roundRect(p.x + 14, p.y + 12, 68, 36, 8); ctx.fill(); ctx.stroke();
-          roundRect(p.x + 104, p.y + 12, 68, 36, 8); ctx.fill(); ctx.stroke();
+          // Folded quilt blanket + plush pillows
+          ctx.fillStyle = '#312e81';
+          roundRect(p.x + 6, p.y + 52, p.w - 12, p.h - 58, 7); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#e0e7ff';
+          roundRect(p.x + 6, p.y + 44, p.w - 12, 16, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f8fafc';
+          roundRect(p.x + 16, p.y + 10, 68, 30, 8); ctx.fill(); ctx.stroke();
+          roundRect(p.x + 104, p.y + 10, 68, 30, 8); ctx.fill(); ctx.stroke();
         } else if (p.type === 'tub') {
-          ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillStyle = '#e2e8f0'; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.6;
           roundRect(p.x, p.y, p.w, p.h, 24); ctx.fill(); ctx.stroke();
-          ctx.fillStyle = '#7dd3fc';
+          const tG = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+          tG.addColorStop(0, '#7dd3fc'); tG.addColorStop(1, '#38bdf8');
+          ctx.fillStyle = tG;
           roundRect(p.x + 14, p.y + 12, p.w - 28, p.h - 24, 18); ctx.fill();
+          // Chrome faucet & drain
+          ctx.fillStyle = '#94a3b8'; ctx.fillRect(p.x + p.w - 22, p.y + p.h / 2 - 4, 14, 8);
+          ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(p.x + p.w - 30, p.y + p.h / 2, 4, 0, Math.PI * 2); ctx.fill();
         } else if (p.type === 'boxes') {
-          ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(p.x + 6, p.y + 8, p.w, p.h);
-          ctx.fillStyle = '#a16207'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.fillRect(p.x + 6, p.y + 8, p.w, p.h);
+          ctx.fillStyle = '#a16207'; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.5;
           ctx.fillRect(p.x, p.y, p.w, p.h); ctx.strokeRect(p.x, p.y, p.w, p.h);
+          ctx.fillStyle = '#fef3c7'; ctx.fillRect(p.x + p.w / 2 - 4, p.y, 8, p.h); // Packing tape
           ctx.fillStyle = '#ca8a04';
           ctx.fillRect(p.x + 10, p.y + 10, p.w * 0.55, p.h * 0.5); ctx.strokeRect(p.x + 10, p.y + 10, p.w * 0.55, p.h * 0.5);
         } else {
-          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 8, p.w, p.h, 8); ctx.fill();
-          ctx.fillStyle = '#334155'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillStyle = 'rgba(0,0,0,0.38)'; roundRect(p.x + 6, p.y + 8, p.w, p.h, 8); ctx.fill();
+          const cG = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
+          cG.addColorStop(0, '#475569'); cG.addColorStop(1, '#1e293b');
+          ctx.fillStyle = cG; ctx.strokeStyle = '#120c1c'; ctx.lineWidth = 2.5;
           roundRect(p.x, p.y, p.w, p.h, 8); ctx.fill(); ctx.stroke();
         }
         ctx.restore();
@@ -1411,9 +1824,11 @@
           ctx.fillStyle = '#fef3c7';
           roundRect(h.x - 14, h.y - 4, 28, 18, 3); ctx.fill(); ctx.stroke();
         }
+        const toolTag = h.reqTool ? ` [${TOOL_META[h.reqTool].icon}${h.haul ? '→🗑️' : ''}]` : '';
         ctx.font = '800 11.5px sans-serif'; ctx.textAlign = 'center';
-        ctx.fillStyle = '#000'; ctx.fillText(h.label, h.x + 1, h.y + 35);
-        ctx.fillStyle = '#f8fafc'; ctx.fillText(h.label, h.x, h.y + 34);
+        ctx.fillStyle = '#000'; ctx.fillText(h.label + toolTag, h.x + 1, h.y + 35);
+        ctx.fillStyle = (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc';
+        ctx.fillText(h.label + toolTag, h.x, h.y + 34);
         if (h.progress > 0) drawProgressBar(h.x, h.y - 34, h.progress / h.hp, '#22c55e');
         ctx.restore();
       }
@@ -1455,6 +1870,37 @@
         ctx.restore();
       }
 
+      // 6b) Bio-One Tool Crates (Glowing orange!) & Garage Roll-Off Dumpster
+      for (const t of toolItems) {
+        if (t.taken) continue;
+        const bob = Math.sin(elapsed * 5 + t.x) * 4.5;
+        ctx.save();
+        ctx.fillStyle = 'rgba(255, 122, 0, 0.24)';
+        ctx.beginPath(); ctx.arc(t.x, t.y, 26, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ea580c'; ctx.strokeStyle = '#090514'; ctx.lineWidth = 2.8;
+        roundRect(t.x - 18, t.y - 15 + bob, 36, 30, 8); ctx.fill(); ctx.stroke();
+        ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(t.icon, t.x, t.y + bob);
+        ctx.font = '900 11px sans-serif';
+        ctx.fillStyle = '#000'; ctx.fillText(t.label, t.x + 1, t.y + 31);
+        ctx.fillStyle = '#fdba74'; ctx.fillText(t.label, t.x, t.y + 30);
+        ctx.restore();
+      }
+      // Bio-One Roll-Off Dumpster in Garage
+      ctx.save();
+      if (player.carryingTrash) {
+        ctx.strokeStyle = '#39ff14'; ctx.lineWidth = 3; ctx.setLineDash([6, 4]);
+        ctx.beginPath(); ctx.arc(DUMPSTER.x, DUMPSTER.y, 44 + Math.sin(elapsed * 8) * 4, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      ctx.fillStyle = '#15803d'; ctx.strokeStyle = '#090514'; ctx.lineWidth = 3;
+      roundRect(DUMPSTER.x - 36, DUMPSTER.y - 22, 72, 44, 6); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#14532d';
+      ctx.fillRect(DUMPSTER.x - 28, DUMPSTER.y - 14, 56, 28);
+      ctx.font = '900 10.5px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillStyle = '#86efac'; ctx.fillText('🗑️ DUMPSTER', DUMPSTER.x, DUMPSTER.y + 34);
+      ctx.restore();
+
       // 7) Depth-sorted Characters (Among Us Hank + Inspectors / Raccoon / Roomba!)
       const actors = [
         { y: player.y, draw: () => drawBean(player.x, player.y, {
@@ -1480,40 +1926,39 @@
             bodyColor: c.bodyColor, shadeColor: c.shadeColor,
             facing: player.x >= c.x ? 1 : -1,
             stepPhase: c.calmed ? 0 : elapsed * 18,
-            moving: !c.calmed, isClient: true, panicking: !c.calmed
+            moving: !c.calmed, isClient: true, panicking: !c.calmed,
+            charName: c.name
           });
           // Nameplate
           ctx.font = '800 11px sans-serif'; ctx.textAlign = 'center';
-          ctx.fillStyle = '#000'; ctx.fillText(c.name, c.x + 1, c.y + 37);
-          ctx.fillStyle = c.calmed ? '#86efac' : '#f0abfc'; ctx.fillText(c.name, c.x, c.y + 36);
+          ctx.fillStyle = '#000'; ctx.fillText(c.name, c.x + 1, c.y + 39);
+          ctx.fillStyle = c.calmed ? '#86efac' : '#f0abfc'; ctx.fillText(c.name, c.x, c.y + 38);
           // Speech bubble or Talk prompt
           const bubbleText = c.calmed ? '✓ Calmed! ⭐' : (near ? '💬 Press E / SPACE to Talk!' : c.yell);
           ctx.font = '800 11px sans-serif';
           const tw = ctx.measureText(bubbleText).width + 16;
           ctx.fillStyle = c.calmed ? 'rgba(10, 28, 22, 0.9)' : (near ? 'rgba(12, 34, 62, 0.96)' : 'rgba(30, 10, 38, 0.92)');
-          roundRect(c.x - tw / 2, c.y - 54, tw, 22, 8); ctx.fill();
+          roundRect(c.x - tw / 2, c.y - 58, tw, 22, 8); ctx.fill();
           ctx.strokeStyle = c.calmed ? '#22c55e' : (near ? '#38bdf8' : '#e879f9');
           ctx.lineWidth = 1.6; ctx.stroke();
           ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
-          ctx.fillText(bubbleText, c.x, c.y - 43);
+          ctx.fillText(bubbleText, c.x, c.y - 47);
         }})),
         ...inspectors.map((g) => ({ y: g.y, draw: () => {
-          if (g.isRaccoon || g.isRoomba) {
-            ctx.save();
-            ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.beginPath(); ctx.ellipse(g.x, g.y + 15, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = g.isRaccoon ? '#475569' : '#1e293b'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(g.x, g.y, 19, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText(g.isRaccoon ? '🦝' : '🤖', g.x, g.y);
-            if (g.isRaccoon && g.stolenLoot) {
-              ctx.font = '15px serif';
-              ctx.fillText(g.stolenLoot === 'suit' ? '🥼' : g.stolenLoot === 'mask' ? '😷' : '🧤', g.x + 17, g.y - 14);
-            }
-            ctx.restore();
+          if (g.isRaccoon) {
+            drawRaccoon(g);
+          } else if (g.isRoomba) {
+            drawRoomba(g);
+          } else if (g.isRoach) {
+            drawRoach(g);
+          } else if (g.isCat) {
+            drawCat(g);
           } else {
             drawBean(g.x, g.y, {
-              bodyColor: '#ef4444', shadeColor: '#b91c1c',
-              facing: g.facing, stepPhase: g.stepPhase, moving: true, isInspector: true
+              bodyColor: g.isAdjuster ? '#0f766e' : '#ef4444',
+              shadeColor: g.isAdjuster ? '#115e59' : '#b91c1c',
+              facing: g.facing, stepPhase: g.stepPhase, moving: true,
+              isInspector: true, charName: g.name
             });
           }
           ctx.font = '800 11px sans-serif'; ctx.textAlign = 'center';
@@ -1551,6 +1996,7 @@
       ctx.restore();
     }
 
+
     function drawProgressBar(x, y, pct, color) {
       const bw = 52, bh = 8;
       ctx.fillStyle = '#0a0f18'; roundRect(x - bw / 2, y, bw, bh, 4); ctx.fill();
@@ -1581,6 +2027,15 @@
         ctx.fillStyle = '#38bdf8';
         ctx.beginPath(); ctx.arc(mx + p.x * sx, my + p.y * sy, 3.8, 0, Math.PI * 2); ctx.fill();
       }
+      // Tool dots (orange)
+      for (const t of toolItems) {
+        if (t.taken) continue;
+        ctx.fillStyle = '#ff7a00';
+        ctx.beginPath(); ctx.arc(mx + t.x * sx, my + t.y * sy, 3.6, 0, Math.PI * 2); ctx.fill();
+      }
+      // Garage Dumpster (bright green square)
+      ctx.fillStyle = player.carryingTrash ? '#39ff14' : '#22c55e';
+      ctx.fillRect(mx + DUMPSTER.x * sx - 4, my + DUMPSTER.y * sy - 3, 8, 6);
       // Hazard dots (green)
       for (const h of hazards) {
         if (h.done) continue;
@@ -1604,11 +2059,354 @@
         ctx.fillStyle = '#ef4444';
         ctx.beginPath(); ctx.arc(mx + g.x * sx, my + g.y * sy, 3.5, 0, Math.PI * 2); ctx.fill();
       }
-      // Hank (white + orange ring)
+      // Hank (white + orange ring + FOV cone in 3D FP mode)
+      const hx = mx + player.x * sx, hy = my + player.y * sy;
+      if (viewMode === 'fp') {
+        ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+        ctx.beginPath();
+        ctx.moveTo(hx, hy);
+        ctx.arc(hx, hy, 22, player.angle - 0.55, player.angle + 0.55);
+        ctx.closePath(); ctx.fill();
+      }
       ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(mx + player.x * sx, my + player.y * sy, 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx, hy, 4.2, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.6; ctx.stroke();
 
+      ctx.restore();
+    }
+
+    // ================= 3D FIRST-PERSON RAYCAST ENGINE =================
+    function castRay(ox, oy, dx, dy) {
+      let bestT = 2600, hitSide = 0, hitU = 0;
+      const invDx = dx === 0 ? 1e9 : 1 / dx;
+      const invDy = dy === 0 ? 1e9 : 1 / dy;
+      for (let i = 0; i < walls.length; i++) {
+        const w = walls[i];
+        let t1 = (w.x - ox) * invDx, t2 = (w.x + w.w - ox) * invDx;
+        let tminX = Math.min(t1, t2), tmaxX = Math.max(t1, t2);
+        let t3 = (w.y - oy) * invDy, t4 = (w.y + w.h - oy) * invDy;
+        let tminY = Math.min(t3, t4), tmaxY = Math.max(t3, t4);
+        const tEnter = Math.max(tminX, tminY);
+        const tExit = Math.min(tmaxX, tmaxY);
+        if (tExit >= Math.max(0.01, tEnter) && tEnter < bestT) {
+          bestT = tEnter;
+          hitSide = tminX > tminY ? 0 : 1;
+          hitU = hitSide === 0 ? (oy + dy * tEnter) : (ox + dx * tEnter);
+        }
+      }
+      return { dist: bestT, side: hitSide, u: hitU };
+    }
+
+    function drawFirstPerson() {
+      const fov = Math.PI / 2.75; // ~65 deg crisp arcade FOV
+      const halfH = VH * 0.5;
+      const bobY = player.moving ? Math.sin(player.stepPhase * 1.1) * 5.5 : Math.sin(elapsed * 2.5) * 1.2;
+      const horizon = halfH + bobY;
+
+      // 1) Ceiling & Perspective Floor Gradients (room-aware tint!)
+      const rm = HOUSE_ROOMS.find((r) => player.x >= r.x && player.x <= r.x + r.w && player.y >= r.y && player.y <= r.y + r.h);
+      const ceilG = ctx.createLinearGradient(0, 0, 0, horizon);
+      ceilG.addColorStop(0, '#140b29');
+      ceilG.addColorStop(1, '#261844');
+      ctx.fillStyle = ceilG;
+      ctx.fillRect(0, 0, VW, horizon);
+
+      const floorG = ctx.createLinearGradient(0, horizon, 0, VH);
+      floorG.addColorStop(0, '#120d1d');
+      floorG.addColorStop(0.35, rm ? rm.floor : '#332924');
+      floorG.addColorStop(1, rm ? rm.alt : '#4a3a30');
+      ctx.fillStyle = floorG;
+      ctx.fillRect(0, horizon, VW, VH - horizon);
+
+      // 2) Raycast 3D Textured Walls + Z-Buffer
+      const stripW = VW > 720 ? 4 : 3;
+      const numRays = Math.ceil(VW / stripW);
+      const zBuf = new Float32Array(numRays);
+      const projPlane = (VW / 2) / Math.tan(fov / 2);
+
+      for (let i = 0; i < numRays; i++) {
+        const camX = (2 * (i + 0.5) / numRays) - 1;
+        const rayAngle = player.angle + Math.atan(camX * Math.tan(fov / 2));
+        const rdx = Math.cos(rayAngle), rdy = Math.sin(rayAngle);
+        const hit = castRay(player.x, player.y, rdx, rdy);
+        const perpDist = Math.max(8, hit.dist * Math.cos(rayAngle - player.angle));
+        zBuf[i] = perpDist;
+
+        const wallH = (92 * projPlane) / perpDist;
+        const top = horizon - wallH * 0.52;
+        const x = i * stripW;
+        const fog = Math.max(0.18, 1 - perpDist / 1150);
+
+        // Paneling / seam texture along wall
+        const panelSeam = (Math.floor(hit.u / 36) % 2 === 0);
+        const seamLine = (Math.abs(hit.u % 36) < 2.2);
+        let r = hit.side === 0 ? 78 : 56;
+        let g = hit.side === 0 ? 60 : 44;
+        let b = hit.side === 0 ? 118 : 92;
+        if (panelSeam) { r += 10; g += 8; b += 12; }
+        if (seamLine) { r -= 24; g -= 20; b -= 28; }
+
+        ctx.fillStyle = `rgb(${Math.round(r * fog)},${Math.round(g * fog)},${Math.round(b * fog)})`;
+        ctx.fillRect(x, top, stripW + 0.5, wallH);
+
+        // Top 80s neon cyan molding trim
+        const trimH = Math.max(2, wallH * 0.045);
+        ctx.fillStyle = `rgba(0, 240, 255, ${(0.55 * fog).toFixed(2)})`;
+        ctx.fillRect(x, top, stripW + 0.5, trimH);
+
+        // Dark wood baseboard along bottom
+        const baseH = Math.max(3, wallH * 0.09);
+        ctx.fillStyle = `rgb(${Math.round(30 * fog)},${Math.round(20 * fog)},${Math.round(45 * fog)})`;
+        ctx.fillRect(x, top + wallH - baseH, stripW + 0.5, baseH);
+      }
+
+      // 3) Collect All 3D Billboards (Characters, Clients, Bad Guys, Hazards, OSHA, PPE, Tools, Dumpster!)
+      const sprites = [];
+      for (const p of ppeItems) if (!p.taken) sprites.push({ x: p.x, y: p.y, type: 'ppe', item: p });
+      for (const t of toolItems) if (!t.taken) sprites.push({ x: t.x, y: t.y, type: 'tool', item: t });
+      sprites.push({ x: DUMPSTER.x, y: DUMPSTER.y, type: 'dumpster', item: DUMPSTER });
+      for (const h of hazards) if (!h.done) sprites.push({ x: h.x, y: h.y, type: 'hazard', item: h });
+      for (const o of oshas) if (!o.done) sprites.push({ x: o.x, y: o.y, type: 'osha', item: o });
+      for (const c of clients) sprites.push({ x: c.x, y: c.y, type: 'client', item: c });
+      for (const g of inspectors) sprites.push({ x: g.x, y: g.y, type: 'enemy', item: g });
+
+      const cosA = Math.cos(player.angle), sinA = Math.sin(player.angle);
+      const visibleSprites = [];
+      for (const s of sprites) {
+        const vx = s.x - player.x, vy = s.y - player.y;
+        const fwd = vx * cosA + vy * sinA;
+        if (fwd < 18 || fwd > 1250) continue;
+        const side = -vx * sinA + vy * cosA;
+        const screenX = (VW / 2) + (side / fwd) * projPlane;
+        if (screenX < -180 || screenX > VW + 180) continue;
+        visibleSprites.push({ ...s, dist: fwd, screenX });
+      }
+      visibleSprites.sort((a, b) => b.dist - a.dist); // Painter's algorithm: far to near
+
+      // 4) Draw Each 3D Billboard Clipped Against Wall Z-Buffer!
+      for (const s of visibleSprites) {
+        const scale = Math.min(3.4, (1.45 * projPlane) / (s.dist * 10.5));
+        const halfW = Math.max(18, 42 * scale);
+        const startCol = Math.max(0, Math.floor((s.screenX - halfW) / stripW));
+        const endCol = Math.min(numRays - 1, Math.ceil((s.screenX + halfW) / stripW));
+
+        // Find contiguous visible horizontal span in Z-buffer so sprites peek around walls!
+        let visL = -1, visR = -1;
+        for (let c = startCol; c <= endCol; c++) {
+          if (s.dist < zBuf[c] + 8) {
+            if (visL === -1) visL = c * stripW;
+            visR = (c + 1) * stripW;
+          }
+        }
+        if (visL === -1) continue;
+
+        const floorY = horizon + (44 * projPlane) / s.dist;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(visL, 0, Math.max(1, visR - visL), VH);
+        ctx.clip();
+
+        if (s.type === 'client') {
+          const c = s.item;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 24 * scale);
+          ctx.scale(scale, scale);
+          drawBean(0, 0, {
+            bodyColor: c.bodyColor, shadeColor: c.shadeColor, facing: 1,
+            stepPhase: c.calmed ? 0 : elapsed * 18, moving: !c.calmed,
+            isClient: true, panicking: !c.calmed, charName: c.name
+          });
+          ctx.restore();
+          const near = !c.calmed && s.dist < 110;
+          const lbl = c.calmed ? `${c.name} ✓` : (near ? `💬 [E / SPACE] Talk to ${c.name}` : `${c.name}: ${c.yell}`);
+          drawFPLabel(s.screenX, floorY - 76 * scale, lbl, c.calmed ? '#86efac' : (near ? '#7dd3fc' : '#f0abfc'));
+        } else if (s.type === 'enemy') {
+          const g = s.item;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - (g.isRaccoon || g.isRoomba || g.isRoach || g.isCat ? 16 : 24) * scale);
+          ctx.scale(scale, scale);
+          const fakeG = { ...g, x: 0, y: 0 };
+          if (g.isRaccoon) drawRaccoon(fakeG);
+          else if (g.isRoomba) drawRoomba(fakeG);
+          else if (g.isRoach) drawRoach(fakeG);
+          else if (g.isCat) drawCat(fakeG);
+          else drawBean(0, 0, {
+            bodyColor: g.isAdjuster ? '#0f766e' : '#ef4444',
+            shadeColor: g.isAdjuster ? '#115e59' : '#b91c1c',
+            facing: 1, stepPhase: g.stepPhase, moving: true, isInspector: true, charName: g.name
+          });
+          ctx.restore();
+          const msg = (g.speechTimer > 0 && g.speech) ? g.speech : g.name;
+          drawFPLabel(s.screenX, floorY - 74 * scale, msg, '#fca5a5');
+        } else if (s.type === 'ppe') {
+          const p = s.item;
+          const bob = Math.sin(elapsed * 5 + p.x) * 6 * scale;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 22 * scale + bob);
+          ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
+          ctx.beginPath(); ctx.arc(0, 0, 24 * scale, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#0ea5e9'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+          roundRect(-17 * scale, -15 * scale, 34 * scale, 30 * scale, 7 * scale); ctx.fill(); ctx.stroke();
+          ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(p.kind === 'suit' ? '🥼' : p.kind === 'mask' ? '😷' : '🧤', 0, 0);
+          ctx.restore();
+          drawFPLabel(s.screenX, floorY - 50 * scale + bob, p.label, '#7dd3fc');
+        } else if (s.type === 'osha') {
+          const o = s.item;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 18 * scale);
+          ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+          ctx.beginPath();
+          ctx.moveTo(0, -20 * scale); ctx.lineTo(20 * scale, 15 * scale); ctx.lineTo(-20 * scale, 15 * scale);
+          ctx.closePath(); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#090514'; ctx.font = `900 ${Math.round(18 * scale)}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 3 * scale);
+          ctx.restore();
+          drawFPLabel(s.screenX, floorY - 48 * scale, 'OSHA: ' + o.label, '#fde047');
+          if (o.progress > 0) drawProgressBar(s.screenX, floorY - 62 * scale, o.progress / o.hp, '#facc15');
+        } else if (s.type === 'tool') {
+          const t = s.item;
+          const bob = Math.sin(elapsed * 5 + t.x) * 6 * scale;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 20 * scale + bob);
+          ctx.fillStyle = 'rgba(255, 122, 0, 0.26)';
+          ctx.beginPath(); ctx.arc(0, 0, 24 * scale, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ea580c'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.4 * scale);
+          roundRect(-17 * scale, -15 * scale, 34 * scale, 30 * scale, 7 * scale); ctx.fill(); ctx.stroke();
+          ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(t.icon, 0, 0);
+          ctx.restore();
+          drawFPLabel(s.screenX, floorY - 48 * scale + bob, '🧰 ' + t.label, '#fdba74');
+        } else if (s.type === 'dumpster') {
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 22 * scale);
+          ctx.fillStyle = '#15803d'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(2, 2.8 * scale);
+          roundRect(-34 * scale, -22 * scale, 68 * scale, 44 * scale, 5 * scale); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#14532d'; ctx.fillRect(-26 * scale, -14 * scale, 52 * scale, 12 * scale);
+          ctx.fillStyle = '#facc15'; ctx.font = `900 ${Math.round(10 * scale)}px sans-serif`;
+          ctx.textAlign = 'center'; ctx.fillText('BIO-ONE', 0, 8 * scale);
+          ctx.restore();
+          drawFPLabel(s.screenX, floorY - 52 * scale, player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', '#86efac');
+        } else if (s.type === 'hazard') {
+          const h = s.item;
+          ctx.save();
+          ctx.translate(s.screenX, floorY - 12 * scale);
+          if (h.kind === 'bio') {
+            ctx.fillStyle = '#22c55e'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.5 * scale);
+            ctx.beginPath(); ctx.ellipse(0, 6 * scale, 28 * scale, 11 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#86efac'; ctx.beginPath(); ctx.arc(-8 * scale, 4 * scale, 4 * scale, 0, Math.PI * 2); ctx.fill();
+          } else if (h.kind === 'odor') {
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.72)'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.2 * scale);
+            ctx.beginPath();
+            ctx.arc(-10 * scale, -4 * scale, 15 * scale, 0, Math.PI * 2);
+            ctx.arc(10 * scale, -7 * scale, 14 * scale, 0, Math.PI * 2);
+            ctx.arc(0, 3 * scale, 13 * scale, 0, Math.PI * 2);
+            ctx.fill(); ctx.stroke();
+          } else {
+            ctx.fillStyle = '#d97706'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.4 * scale);
+            roundRect(-22 * scale, -12 * scale, 24 * scale, 22 * scale, 4 * scale); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#f59e0b';
+            roundRect(-2 * scale, -18 * scale, 24 * scale, 22 * scale, 4 * scale); ctx.fill(); ctx.stroke();
+          }
+          ctx.restore();
+          const tTag = h.reqTool ? ` [${TOOL_META[h.reqTool].icon}${h.haul ? '→🗑️' : ''}]` : '';
+          drawFPLabel(s.screenX, floorY - 40 * scale, h.label + tTag, (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc');
+          if (h.progress > 0) drawProgressBar(s.screenX, floorY - 54 * scale, h.progress / h.hp, '#22c55e');
+        }
+        ctx.restore();
+      }
+
+      // 5) First-Person Hands, Decon Sprayer, Crosshair & Floating Notifications
+      drawFPHands();
+      for (const f of floaters) {
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, f.life / 0.5);
+        ctx.font = '900 15px sans-serif'; ctx.textAlign = 'center';
+        const fy = VH * 0.28 - (1.45 - f.life) * 34;
+        ctx.fillStyle = '#000'; ctx.fillText(f.text, VW / 2 + 1.5, fy + 1.5);
+        ctx.fillStyle = f.color; ctx.fillText(f.text, VW / 2, fy);
+        ctx.restore();
+      }
+    }
+
+    function drawFPLabel(x, y, text, color) {
+      if (y < 24 || y > VH - 20) return;
+      ctx.font = '800 11.5px sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const tw = ctx.measureText(text).width + 14;
+      ctx.fillStyle = 'rgba(9, 5, 20, 0.84)';
+      roundRect(x - tw / 2, y - 10, tw, 20, 7); ctx.fill();
+      ctx.fillStyle = color;
+      ctx.fillText(text, x, y);
+    }
+
+    function drawFPHands() {
+      ctx.save();
+      // Subtle P100 safety goggles frame when wearing mask
+      if (player.mask) {
+        const gGrad = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.38, VW / 2, VH / 2, Math.max(VW, VH) * 0.65);
+        gGrad.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        gGrad.addColorStop(1, 'rgba(0, 180, 220, 0.24)');
+        ctx.fillStyle = gGrad;
+        ctx.fillRect(0, 0, VW, VH);
+      }
+
+      // Center arcade crosshair
+      const cx = VW / 2, cy = VH / 2;
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.78)'; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 3, cy);
+      ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 8, cy);
+      ctx.moveTo(cx, cy - 8); ctx.lineTo(cx, cy - 3);
+      ctx.moveTo(cx, cy + 3); ctx.lineTo(cx, cy + 8);
+      ctx.stroke();
+
+      // First-Person Bio-One Decon Pressure Sprayer + Gloved Hand (bottom-right!)
+      const bobX = player.moving ? Math.cos(player.stepPhase * 0.7) * 9 : Math.sin(elapsed * 2) * 2;
+      const bobY = player.moving ? Math.abs(Math.sin(player.stepPhase * 0.7)) * 10 : Math.cos(elapsed * 2) * 2;
+      const recoil = player.scrubbing ? Math.sin(elapsed * 32) * 7 : 0;
+      const gx = VW * 0.74 + bobX;
+      const gy = VH - 84 + bobY + recoil;
+
+      // Chem 1 / Chem 4 Decon Spray Stream when scrubbing!
+      if (player.scrubbing) {
+        const sGrad = ctx.createLinearGradient(gx - 38, gy - 44, cx, cy);
+        sGrad.addColorStop(0, 'rgba(0, 240, 255, 0.85)');
+        sGrad.addColorStop(0.5, 'rgba(57, 255, 20, 0.55)');
+        sGrad.addColorStop(1, 'rgba(57, 255, 20, 0)');
+        ctx.strokeStyle = sGrad; ctx.lineWidth = 14; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(gx - 36, gy - 42); ctx.lineTo(cx, cy); ctx.stroke();
+      }
+
+      // Forearm (white Tyvek sleeve or blue 80s windbreaker)
+      ctx.fillStyle = player.suit ? '#f8fafc' : '#0284c7';
+      ctx.strokeStyle = '#090514'; ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(gx + 10, gy + 95); ctx.lineTo(gx - 22, gy + 10);
+      ctx.lineTo(gx + 24, gy - 4); ctx.lineTo(gx + 64, gy + 95);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Bio-One Orange & Chrome Decon Sprayer Nozzle
+      ctx.fillStyle = '#ff7a00';
+      roundRect(gx - 42, gy - 48, 42, 62, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#cbd5e1';
+      roundRect(gx - 36, gy - 68, 18, 24, 5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#00f0ff';
+      ctx.fillRect(gx - 32, gy - 32, 22, 9);
+
+      // Hand gripping sprayer (blue nitrile glove if equipped!)
+      ctx.fillStyle = player.gloves ? '#38bdf8' : '#d46a28';
+      roundRect(gx - 18, gy - 12, 34, 30, 12); ctx.fill(); ctx.stroke();
+
+      // Left-hand heavy Bio-One Trash Bag when hauling to Garage Dumpster!
+      if (player.carryingTrash) {
+        const bx = VW * 0.22 - bobX, by = VH - 68 + bobY;
+        ctx.fillStyle = '#1e293b'; ctx.strokeStyle = '#090514'; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.ellipse(bx, by + 24, 46, 54, -0.1, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(bx - 16, by - 26, 32, 9); // Red bio-tie!
+        ctx.fillStyle = '#facc15'; ctx.font = '900 11px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('☣️ HAUL TO GARAGE', bx, by + 16);
+      }
       ctx.restore();
     }
 
@@ -1617,10 +2415,31 @@
       const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
       lastTs = ts;
       update(dt);
-      drawWorld();
+      if (viewMode === 'fp') drawFirstPerson(); else drawWorld();
       drawMinimap();
       requestAnimationFrame(loop);
     }
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'fp' ? 'top' : 'fp';
+      document.getElementById('btn-view-toggle').textContent = viewMode === 'fp' ? '👁️ 3D FP' : '🗺️ 2D MAP';
+      addFloater(player.x, player.y - 36, viewMode === 'fp' ? '👁️ 3D FIRST-PERSON MODE!' : '🗺️ 2D TOP-DOWN MODE!', '#00f0ff');
+    }
+    document.getElementById('btn-view-toggle').onclick = toggleViewMode;
+
+    // Swipe / drag on canvas to look around in First-Person 3D mode!
+    let lookPointerId = null, lastLookX = 0;
+    canvas.addEventListener('pointerdown', (e) => {
+      if (viewMode !== 'fp' || activeClient || !running) return;
+      lookPointerId = e.pointerId; lastLookX = e.clientX;
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== lookPointerId || viewMode !== 'fp') return;
+      const ddx = e.clientX - lastLookX; lastLookX = e.clientX;
+      player.angle += ddx * 0.0075;
+    });
+    canvas.addEventListener('pointerup', (e) => { if (e.pointerId === lookPointerId) lookPointerId = null; });
+    canvas.addEventListener('pointercancel', (e) => { if (e.pointerId === lookPointerId) lookPointerId = null; });
 
     window.addEventListener('keydown', (e) => {
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
@@ -1633,6 +2452,7 @@
         }
         return;
       }
+      if (e.code === 'KeyV' && !e.repeat) { toggleViewMode(); return; }
       keys[e.code] = true;
     });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
