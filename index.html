@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#060b14" />
+  <meta property="og:title" content="Bio-One Highlands: Hazmat Hero ☣️" />
+  <meta property="og:description" content="Suit up in PPE, scrub biohazards, dodge OSHA Gary, and talk down freaking-out clients!" />
+  <title>Bio-One Highlands: Hazmat Hero</title>
+  <style>
+    :root {
+      --bg: #060b14;
+      --panel: rgba(11, 20, 36, 0.92);
+      --border: rgba(147, 197, 253, 0.24);
+      --orange: #f97316;
+      --blue: #38bdf8;
+      --green: #22c55e;
+      --yellow: #facc15;
+      --red: #ef4444;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+    html, body {
+      width: 100%; height: 100%; height: 100dvh; overflow: hidden;
+      background: radial-gradient(circle at 20% 10%, #102444 0%, #060b14 65%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      touch-action: manipulation;
+    }
+
+    .hud {
+      width: min(1040px, 96vw);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 9px 14px; margin-bottom: 8px;
+      border-radius: 16px; background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+      flex-wrap: wrap;
+    }
+    .hud-brand { display: flex; align-items: center; gap: 10px; }
+    .bio-badge {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      display: grid; place-items: center; font-size: 18px;
+      box-shadow: 0 0 18px rgba(249, 115, 22, 0.45);
+    }
+    .hud-title { font-size: 15px; font-weight: 900; letter-spacing: -0.02em; }
+    .hud-sub { font-size: 11px; color: var(--blue); font-family: ui-monospace, monospace; }
+
+    .hud-stats { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .stat-pill {
+      padding: 5px 10px; border-radius: 999px;
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-pill.ppe-ok { border-color: rgba(34, 197, 94, 0.6); background: rgba(34, 197, 94, 0.16); color: #86efac; }
+    .stat-pill.ppe-warn { border-color: rgba(250, 204, 21, 0.6); background: rgba(250, 204, 21, 0.16); color: #fde047; }
+
+    .stage-wrap {
+      position: relative;
+      width: min(1040px, 96vw);
+      aspect-ratio: 16 / 10;
+      max-height: 77vh;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2.5px solid rgba(96, 165, 250, 0.36);
+      box-shadow: 0 26px 70px rgba(0, 0, 0, 0.7);
+      background: #0d1118;
+    }
+
+    canvas { width: 100%; height: 100%; display: block; }
+
+    .room-banner {
+      position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+      padding: 6px 16px; border-radius: 999px;
+      background: rgba(8, 15, 28, 0.88);
+      border: 1.5px solid rgba(56, 189, 248, 0.48);
+      color: #e0f2fe; font-size: 12px; font-weight: 800; letter-spacing: 0.08em;
+      text-transform: uppercase; pointer-events: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+      transition: opacity 0.25s ease;
+    }
+
+    .controls-bar {
+      width: min(1040px, 96vw);
+      margin-top: 8px;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; color: var(--muted); gap: 10px; flex-wrap: wrap;
+    }
+    .kbd {
+      display: inline-block; padding: 2px 6px; border-radius: 5px;
+      background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.16);
+      color: var(--text); font-family: ui-monospace, monospace; font-size: 11px; font-weight: 700;
+    }
+
+    .overlay {
+      position: absolute; inset: 0;
+      background: rgba(5, 10, 20, 0.84);
+      backdrop-filter: blur(8px);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 26px; gap: 14px; z-index: 20;
+    }
+    .overlay.hidden { display: none; }
+    .overlay h1 {
+      font-size: clamp(24px, 3.6vw, 38px); font-weight: 900; letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, #93c5fd 50%, #f97316 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .overlay p { max-width: 580px; color: #cbd5e1; font-size: 14px; line-height: 1.55; }
+    .btn {
+      padding: 12px 24px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #f97316, #ea580c);
+      color: #060a12; font-weight: 900; font-size: 14px; cursor: pointer;
+      box-shadow: 0 10px 26px rgba(249, 115, 22, 0.4);
+      transition: transform 0.14s ease, filter 0.14s ease;
+    }
+    .btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .btn-blue { background: linear-gradient(135deg, #3b82f6, #38bdf8); box-shadow: 0 10px 26px rgba(59, 130, 246, 0.35); }
+
+    .report-card {
+      width: min(460px, 90%);
+      background: rgba(15, 27, 48, 0.94);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      border-radius: 16px; padding: 16px 18px; text-align: left;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .rc-row { display: flex; justify-content: space-between; font-size: 13px; }
+    .rc-row span:first-child { color: var(--muted); }
+    .rc-row span:last-child { font-weight: 800; font-family: ui-monospace, monospace; }
+    .rc-quote {
+      margin-top: 6px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);
+      font-size: 12.5px; color: #fde68a; font-style: italic;
+    }
+
+    /* Client De-Escalation Dialogue Modal */
+    .dialog-card {
+      width: min(580px, 92%);
+      background: rgba(11, 22, 42, 0.97);
+      border: 2px solid rgba(232, 121, 249, 0.6);
+      border-radius: 20px;
+      padding: 20px 22px;
+      text-align: left;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 32px rgba(232, 121, 249, 0.2);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .dialog-header { display: flex; align-items: center; gap: 12px; }
+    .dialog-avatar {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: grid; place-items: center; font-size: 26px;
+      background: rgba(232, 121, 249, 0.18);
+      border: 1.5px solid rgba(232, 121, 249, 0.5);
+      flex-shrink: 0;
+    }
+    .dialog-name { font-size: 17px; font-weight: 900; color: #f8fafc; }
+    .dialog-role { font-size: 11.5px; color: #f0abfc; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .dialog-rant {
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 4px solid #e879f9;
+      padding: 12px 14px; border-radius: 10px;
+      font-size: 14px; line-height: 1.5; color: #f1f5f9; font-weight: 600;
+    }
+    .dialog-choices { display: flex; flex-direction: column; gap: 8px; }
+    .choice-btn {
+      width: 100%; text-align: left;
+      padding: 11px 14px; border-radius: 12px;
+      background: rgba(30, 58, 108, 0.42);
+      border: 1.5px solid rgba(147, 197, 253, 0.28);
+      color: #f8fafc; font-size: 13.5px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: flex-start; gap: 10px;
+      transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    }
+    .choice-btn:hover:not(:disabled) {
+      transform: translateX(4px);
+      background: rgba(56, 189, 248, 0.22);
+      border-color: rgba(56, 189, 248, 0.7);
+    }
+    .choice-btn:disabled {
+      opacity: 0.42; cursor: not-allowed; text-decoration: line-through;
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+    .choice-key {
+      display: inline-grid; place-items: center;
+      width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.12);
+      font-family: ui-monospace, monospace; font-size: 12px; font-weight: 900; color: #7dd3fc;
+    }
+    .dialog-result {
+      padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 700;
+      display: none;
+    }
+    .dialog-result.show { display: block; }
+    .dialog-result.good { background: rgba(34, 197, 94, 0.16); border: 1px solid rgba(34, 197, 94, 0.5); color: #86efac; }
+    .dialog-result.ok { background: rgba(250, 204, 21, 0.16); border: 1px solid rgba(250, 204, 21, 0.5); color: #fde047; }
+    .dialog-result.bad { background: rgba(239, 68, 68, 0.18); border: 1px solid rgba(239, 68, 68, 0.55); color: #fca5a5; }
+
+    /* Mobile Touch Controls */
+    .touch-controls {
+      position: absolute; inset: auto 0 0 0;
+      padding: 16px 18px calc(16px + env(safe-area-inset-bottom));
+      display: none; align-items: flex-end; justify-content: space-between;
+      pointer-events: none; z-index: 12;
+    }
+    .joy-base {
+      width: 118px; height: 118px; border-radius: 50%;
+      background: rgba(8, 16, 32, 0.52);
+      border: 2px solid rgba(147, 197, 253, 0.38);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 0 18px rgba(56, 189, 248, 0.15);
+      position: relative; pointer-events: auto; touch-action: none;
+      backdrop-filter: blur(4px);
+    }
+    .joy-stick {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #7dd3fc, #2563eb);
+      border: 2.5px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.6);
+      position: absolute; left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .act-btn {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(145deg, rgba(249, 115, 22, 0.92), rgba(234, 88, 12, 0.92));
+      border: 3px solid rgba(255, 255, 255, 0.75);
+      box-shadow: 0 10px 28px rgba(249, 115, 22, 0.48);
+      color: #fff; font-weight: 900; font-size: 13px; line-height: 1.15;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      pointer-events: auto; touch-action: none; cursor: pointer;
+      transition: transform 0.08s ease, background 0.15s ease;
+    }
+    .act-btn:active, .act-btn.pressed { transform: scale(0.92); filter: brightness(1.12); }
+    .act-btn.talk-mode {
+      background: linear-gradient(145deg, rgba(217, 70, 239, 0.95), rgba(147, 51, 234, 0.95));
+      box-shadow: 0 10px 30px rgba(217, 70, 239, 0.6);
+    }
+
+    @media (max-width: 860px), (pointer: coarse) {
+      .touch-controls { display: flex; }
+      .controls-bar { display: none; }
+      body { justify-content: flex-start; }
+      .hud {
+        width: 100%; border-radius: 0; margin-bottom: 0;
+        padding: 7px 10px; gap: 6px; border-left: none; border-right: none; border-top: none;
+      }
+      .hud-brand { gap: 7px; }
+      .bio-badge { width: 26px; height: 26px; font-size: 14px; border-radius: 7px; }
+      .hud-title { font-size: 12px; }
+      .hud-sub { display: none; }
+      .hud-stats { gap: 4px; }
+      .stat-pill { padding: 3px 7px; font-size: 10.5px; }
+      .stage-wrap {
+        width: 100%; flex: 1; aspect-ratio: auto; max-height: none;
+        border-radius: 0; border-left: none; border-right: none; border-bottom: none;
+      }
+      .room-banner { top: 8px; font-size: 10px; padding: 4px 10px; }
+      .overlay { padding: 14px; gap: 10px; overflow-y: auto; }
+      .overlay p { font-size: 13px; }
+      .dialog-card { width: 96%; padding: 14px 14px; gap: 10px; }
+      .dialog-rant { font-size: 13px; padding: 9px 11px; }
+      .choice-btn { font-size: 12.5px; padding: 9px 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-brand">
+      <div class="bio-badge">☣️</div>
+      <div>
+        <div class="hud-title">BIO-ONE HIGHLANDS · HAZMAT HERO</div>
+        <div class="hud-sub" id="hud-level">Job 1: The Hoarder's Split-Level</div>
+      </div>
+    </div>
+    <div class="hud-stats">
+      <div class="stat-pill ppe-warn" id="hud-ppe">🦺 PPE: 0/3</div>
+      <div class="stat-pill" id="hud-clean">🧹 Hazards: 0</div>
+      <div class="stat-pill" id="hud-osha">⚠️ OSHA: 0</div>
+      <div class="stat-pill" id="hud-clients" style="border-color:rgba(232,121,249,0.5);color:#f0abfc;">😰 Clients: 0</div>
+      <div class="stat-pill" style="color:#4ade80;" id="hud-score">💵 $0</div>
+      <div class="stat-pill" id="hud-timer">⏱ 0:00</div>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <canvas id="game" width="1024" height="640"></canvas>
+    <div class="room-banner" id="room-banner">📍 FRONT FOYER</div>
+
+    <div class="touch-controls" id="touch-controls">
+      <div class="joy-base" id="joy-base">
+        <div class="joy-stick" id="joy-stick"></div>
+      </div>
+      <button class="act-btn" id="btn-touch-act" type="button">
+        <span style="font-size:24px;" id="touch-act-icon">🧹</span>
+        <span id="touch-act-label">SCRUB</span>
+      </button>
+    </div>
+
+    <div class="overlay" id="start-overlay">
+      <div style="font-size:48px;">🐮☣️🏠</div>
+      <h1>HAZMAT HERO: HOUSE CALL</h1>
+      <p>
+        Explore a <strong>multi-room 2.5D hoarder house</strong> Zelda-style as <strong>Hank</strong>!
+        Hunt down your missing <strong>PPE</strong>, scrub <strong>biohazards</strong>, fix sneaky <strong>OSHA violations</strong>,
+        talk down <strong>freaking-out clients</strong> with the right response, and dodge <strong>OSHA Gary</strong>!
+      </p>
+      <button class="btn" id="btn-start">ENTER THE HOUSE →</button>
+      <div style="font-size:12px; color:#94a3b8;">
+        Move: <span class="kbd">WASD</span> / <span class="kbd">Arrows</span> &nbsp;·&nbsp;
+        Scrub / Fix / Talk: <span class="kbd">SPACE</span> or <span class="kbd">E</span> &nbsp;·&nbsp;
+        Sprint: <span class="kbd">SHIFT</span>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="client-overlay">
+      <div class="dialog-card">
+        <div class="dialog-header">
+          <div class="dialog-avatar" id="dlg-avatar">😱</div>
+          <div>
+            <div class="dialog-name" id="dlg-name">Client Name</div>
+            <div class="dialog-role" id="dlg-role">Panicking Homeowner</div>
+          </div>
+        </div>
+        <div class="dialog-rant" id="dlg-rant"></div>
+        <div class="dialog-choices" id="dlg-choices"></div>
+        <div class="dialog-result" id="dlg-result"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:#94a3b8;">
+          <span>Press <span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> or click how Hank handles this</span>
+          <button class="btn btn-blue" id="dlg-close" style="padding:7px 14px; font-size:12px; display:none;">BACK TO JOB →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="win-overlay">
+      <div style="font-size:44px;">🏆✨</div>
+      <h1 id="win-title">HOUSE SANITIZED!</h1>
+      <div class="report-card" id="win-report"></div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-blue" id="btn-replay">REPLAY JOB</button>
+        <button class="btn" id="btn-next">NEXT DISPATCH →</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-bar">
+    <div>
+      <span class="kbd">WASD</span> / <span class="kbd">↑↓←→</span> Explore Rooms &nbsp;·&nbsp;
+      <span class="kbd">SPACE</span> / <span class="kbd">E</span> Scrub / Fix / Talk to Clients &nbsp;·&nbsp;
+      <span class="kbd">SHIFT</span> Sprint
+    </div>
+    <div style="color:#93c5fd; font-weight:600;">Minimap: 🔵 PPE · 🟢 Hazard · 🟡 OSHA · 🟣 Client · 🔴 Gary</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    let VW = canvas.width, VH = canvas.height;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const isMobile = rect.width < 820;
+      const targetW = isMobile ? Math.max(420, Math.min(680, Math.round(rect.width * 1.15))) : 1024;
+      const targetH = Math.round(targetW * (rect.height / rect.width));
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+        VW = targetW;
+        VH = targetH;
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // Large Zelda-style multi-room house world!
+    const WORLD_W = 1920, WORLD_H = 1280;
+    const WALL_DEPTH = 26; // 2.5D extruded wall face height!
+
+    // ================= PROCEDURAL SFX =================
+    let audioCtx = null;
+    function sfx(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'pickup') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(520, now);
+          osc.frequency.exponentialRampToValueAtTime(1040, now + 0.15);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          osc.start(now); osc.stop(now + 0.18);
+        } else if (type === 'clean') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(640, now);
+          osc.frequency.exponentialRampToValueAtTime(1280, now + 0.18);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.start(now); osc.stop(now + 0.22);
+        } else if (type === 'whistle') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1650, now);
+          osc.frequency.setValueAtTime(1950, now + 0.08);
+          osc.frequency.setValueAtTime(1520, now + 0.16);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.34);
+          osc.start(now); osc.stop(now + 0.34);
+        } else if (type === 'scrub') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(180 + Math.random() * 140, now);
+          gain.gain.setValueAtTime(0.025, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+          osc.start(now); osc.stop(now + 0.05);
+        } else if (type === 'win') {
+          [523, 659, 784, 1046].forEach((f, i) => {
+            const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+            o.type = 'triangle'; o.connect(g); g.connect(audioCtx.destination);
+            o.frequency.setValueAtTime(f, now + i * 0.09);
+            g.gain.setValueAtTime(0.14, now + i * 0.09);
+            g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.25);
+            o.start(now + i * 0.09); o.stop(now + i * 0.09 + 0.25);
+          });
+        }
+      } catch {}
+    }
+
+    // ================= 6-ROOM 2.5D HOUSE FLOORPLAN =================
+    // 3 columns x 2 rows of distinct rooms connected by wide doorways!
+    // Cols: [40..640], [640..1280], [1280..1880]
+    // Rows: [40..640], [640..1240]
+    function buildHouseWalls() {
+      const T = 26;
+      return [
+        // Outer perimeter
+        { x: 0, y: 0, w: WORLD_W, h: 46 },
+        { x: 0, y: WORLD_H - 40, w: WORLD_W, h: 40 },
+        { x: 0, y: 0, w: 40, h: WORLD_H },
+        { x: WORLD_W - 40, y: 0, w: 40, h: WORLD_H },
+
+        // Vertical divider 1 (x = 640) with top doorway (y: 260..390) & bottom doorway (y: 880..1010)
+        { x: 640, y: 40, w: T, h: 220 },
+        { x: 640, y: 390, w: T, h: 490 },
+        { x: 640, y: 1010, w: T, h: 230 },
+
+        // Vertical divider 2 (x = 1280) with top doorway (y: 260..390) & bottom doorway (y: 880..1010)
+        { x: 1280, y: 40, w: T, h: 220 },
+        { x: 1280, y: 390, w: T, h: 490 },
+        { x: 1280, y: 1010, w: T, h: 230 },
+
+        // Horizontal divider (y = 640) with 3 doorways: left (270..410), mid (890..1030), right (1510..1650)
+        { x: 40, y: 640, w: 230, h: T },
+        { x: 410, y: 640, w: 480, h: T },
+        { x: 1030, y: 640, w: 480, h: T },
+        { x: 1650, y: 640, w: 230, h: T },
+      ];
+    }
+
+    const HOUSE_ROOMS = [
+      { id: 'foyer',    name: 'Front Foyer & Living Room', x: 40,   y: 40,  w: 600, h: 600, floor: '#3d332a', alt: '#463b30', style: 'wood' },
+      { id: 'kitchen',  name: 'The Kitchen',               x: 666,  y: 40,  w: 614, h: 600, floor: '#2b3948', alt: '#344557', style: 'checker' },
+      { id: 'garage',   name: 'Hoarder Garage',            x: 1306, y: 40,  w: 574, h: 600, floor: '#2d333b', alt: '#333a43', style: 'concrete' },
+      { id: 'bedroom',  name: 'Master Bedroom',            x: 40,   y: 666, w: 600, h: 574, floor: '#362c3d', alt: '#3f3447', style: 'carpet' },
+      { id: 'bathroom', name: 'Biohazard Bathroom',        x: 666,  y: 666, w: 614, h: 574, floor: '#243c44', alt: '#2a4750', style: 'tile' },
+      { id: 'basement', name: 'The Mystery Basement',      x: 1306, y: 666, w: 574, h: 574, floor: '#252830', alt: '#2b2f38', style: 'concrete' },
+    ];
+
+    const HOUSE_PROPS = [
+      // Living room couch, rug, TV
+      { type: 'rug', x: 170, y: 240, w: 280, h: 170, color: '#6b2c2c' },
+      { type: 'couch', x: 190, y: 120, w: 210, h: 68 },
+      { type: 'tv', x: 220, y: 540, w: 150, h: 44 },
+      // Kitchen island & fridge
+      { type: 'counter', x: 820, y: 100, w: 290, h: 58 },
+      { type: 'island', x: 860, y: 310, w: 200, h: 86 },
+      // Garage workbench & shelving
+      { type: 'counter', x: 1460, y: 95, w: 280, h: 55 },
+      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120 },
+      // Bedroom bed & rug
+      { type: 'rug', x: 150, y: 820, w: 300, h: 200, color: '#2b3e63' },
+      { type: 'bed', x: 105, y: 980, w: 190, h: 155 },
+      // Bathroom tub & vanity
+      { type: 'tub', x: 1050, y: 740, w: 165, h: 85 },
+      { type: 'counter', x: 740, y: 1130, w: 210, h: 54 },
+      // Basement crates
+      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100 },
+      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110 },
+    ];
+
+    const LEVELS = [
+      {
+        name: "Job 1: The Hoarder's Split-Level",
+        review: '“Found my 1996 Bowling Trophy AND my kitchen floor! 5 stars!” — Dave from Morristown',
+        ppe: [
+          { kind: 'suit',   label: 'Tyvek Suit',      x: 500,  y: 160 },
+          { kind: 'mask',   label: 'P100 Respirator', x: 1140, y: 200 },
+          { kind: 'gloves', label: 'Nitrile Gloves',  x: 180,  y: 800 },
+        ],
+        hazards: [
+          { kind: 'hoard', label: '1994 Newspapers',  x: 470,  y: 470, hp: 1.0, val: 380 },
+          { kind: 'bio',   label: 'Kitchen Ooze',     x: 760,  y: 490, hp: 1.3, val: 720 },
+          { kind: 'hoard', label: '2003 Tupperware',  x: 1150, y: 490, hp: 1.1, val: 440 },
+          { kind: 'bio',   label: 'Garage Bio-Spill', x: 1580, y: 270, hp: 1.4, val: 850 },
+          { kind: 'odor',  label: 'Bathroom Cloud',   x: 920,  y: 940, hp: 1.2, val: 580 },
+          { kind: 'bio',   label: 'Basement Puddle',  x: 1560, y: 940, hp: 1.5, val: 920 },
+          { kind: 'hoard', label: 'VHS Mountain',     x: 470,  y: 1100, hp: 1.1, val: 420 },
+        ],
+        oshas: [
+          { label: '7x Daisy-Chained Cord', fixMsg: 'Unplugged fire hazard!', x: 140,  y: 470,  hp: 1.1, val: 450 },
+          { label: 'Unlabeled Bleach Jug',  fixMsg: 'Slapped GHS Label on it!', x: 760, y: 200,  hp: 1.0, val: 420 },
+          { label: 'Blocked Fire Exit',     fixMsg: 'Moved 1988 Bowflex!',    x: 1790, y: 220,  hp: 1.2, val: 500 },
+          { label: 'No Wet Floor Cone',     fixMsg: 'Deployed Safety Cone!',  x: 860,  y: 770,  hp: 1.0, val: 400 },
+        ],
+        inspectors: [
+          { name: 'OSHA Gary', x: 960, y: 500, vx: 95, vy: 70 },
+          { name: 'Raccoon Dave', x: 1560, y: 480, vx: -110, vy: 85, isRaccoon: true },
+        ],
+        clients: [
+          {
+            name: 'Hoarder Dave', role: 'Panicking Homeowner', avatar: '😰',
+            bodyColor: '#c084fc', shadeColor: '#9333ea',
+            x: 340, y: 290,
+            yell: "DON'T TOUCH MY 1994 TV GUIDES!!",
+            rant: '“WAIT A SECOND!! Are you throwing away my mint-condition 1994 TV Guides?! The Seinfeld finale issue is worth DOZENS of dollars!!”',
+            choices: [
+              {
+                text: '“Don’t worry Dave — Bio-One sorts keepsakes into a separate ‘Save’ bin first. We’ve got you.”',
+                outcome: 'good', delta: 400,
+                reply: '“Oh thank goodness! You guys really are pros. Here’s a 5-star review already!”',
+                calmMsg: 'Dave is chilling! +$400'
+              },
+              {
+                text: '“Tell you what — I’ll scan the Seinfeld cover onto your phone and bag the soggy ones.”',
+                outcome: 'ok', delta: 200,
+                reply: '“Huh… I guess digital nostalgia doesn’t smell like wet basement. Deal!”',
+                calmMsg: 'Compromise worked! +$200'
+              },
+              {
+                text: '“Relax Dave, I already tossed them in the bio-bin with the mystery fridge lasagna.”',
+                outcome: 'bad', delta: -150,
+                reply: '“MY SEINFELD ISSUE?! MY HEART!! CALL THE MANAGER!!” (Try another approach!)',
+                calmMsg: ''
+              }
+            ]
+          },
+          {
+            name: 'HOA Karen', role: 'Nosy Neighbor Peeking In', avatar: '😤',
+            bodyColor: '#f472b6', shadeColor: '#db2777',
+            x: 960, y: 215,
+            yell: 'THE NEIGHBORS ARE WATCHING!!',
+            rant: '“EXCUSE ME! Is that a BIOHAZARD truck in the driveway?! What will the HOA board think?! Everyone on Nextdoor is already asking!”',
+            choices: [
+              {
+                text: '“Bio-One uses discreet unmarked vehicles & total confidentiality — your neighbors just think we’re remodeling.”',
+                outcome: 'good', delta: 400,
+                reply: '“Oh! Discreet AND classy?! Carry on, handsome hazmat cow!”',
+                calmMsg: 'Karen impressed! +$400'
+              },
+              {
+                text: '“Ma’am, this is an official secret HGTV makeover. Please sign this NDA.”',
+                outcome: 'ok', delta: 220,
+                reply: '“Ooooh HGTV?! I’ll go put on my good cardigan and leave you alone!”',
+                calmMsg: 'Distracted with HGTV! +$220'
+              },
+              {
+                text: '“Ma’am, step back or I’ll tell Nextdoor the smell is coming from YOUR garage.”',
+                outcome: 'bad', delta: -150,
+                reply: '“HOW DARE YOU!! I AM LIVE-STREAMING THIS TO THE HOA BOARD!!”',
+                calmMsg: ''
+              }
+            ]
+          },
+          {
+            name: 'Cousin Ricky', role: 'Overwhelmed Nephew', avatar: '🤯',
+            bodyColor: '#2dd4bf', shadeColor: '#0d9488',
+            x: 340, y: 920,
+            yell: 'IS THIS COVERED BY INSURANCE?!',
+            rant: '“Bro I walked into the bathroom and saw my soul leave my body! Is insurance gonna cover this or do I have to sell my jet ski?!”',
+            choices: [
+              {
+                text: '“Take a breath Ricky — we document everything and work directly with your insurance adjuster.”',
+                outcome: 'good', delta: 450,
+                reply: '“Wait, you handle the insurance paperwork too?! My jet ski lives to ride another day!!”',
+                calmMsg: 'Ricky relieved! +$450'
+              },
+              {
+                text: '“Keep the jet ski, Ricky. Just sign the ServiceMinder estimate and go grab some tacos.”',
+                outcome: 'ok', delta: 200,
+                reply: '“Honestly tacos sound way better than staring at this carpet. Signing now!”',
+                calmMsg: 'Taco diplomacy! +$200'
+              },
+              {
+                text: '“Honestly? Yeah, put the jet ski on Facebook Marketplace right now.”',
+                outcome: 'bad', delta: -150,
+                reply: '“NOT SEA-DOO SHAKIRA!! I’M HYPERVENTILATING!!”',
+                calmMsg: ''
+              }
+            ]
+          }
+        ]
+      },
+      {
+        name: "Job 2: Grandma's 47-Cat Estate",
+        review: '“ATP Swab read 0 RLU! Even the cats are impressed.” — Bio-One HQ',
+        ppe: [
+          { kind: 'suit',   label: 'Tyvek Suit',      x: 1740, y: 150 },
+          { kind: 'mask',   label: 'P100 Respirator', x: 470,  y: 1090 },
+          { kind: 'gloves', label: 'Nitrile Gloves',  x: 1120, y: 1090 },
+        ],
+        hazards: [
+          { kind: 'bio',   label: 'Litter Mountain',    x: 200,  y: 470,  hp: 1.4, val: 850 },
+          { kind: 'hoard', label: '400 Pizza Boxes',    x: 1140, y: 470,  hp: 1.2, val: 520 },
+          { kind: 'odor',  label: 'Mega Ammonia Cloud', x: 1520, y: 290,  hp: 1.3, val: 680 },
+          { kind: 'bio',   label: 'Glowing Carpet',     x: 450,  y: 800,  hp: 1.5, val: 950 },
+          { kind: 'bio',   label: 'Tub Bio-Disaster',   x: 920,  y: 960,  hp: 1.5, val: 980 },
+          { kind: 'hoard', label: '1978 TV Guides',     x: 1540, y: 1110, hp: 1.2, val: 560 },
+          { kind: 'bio',   label: 'Mystery Barrel',     x: 1730, y: 840,  hp: 1.6, val: 1100 },
+        ],
+        oshas: [
+          { label: 'Missing SDS Binder',  fixMsg: 'SDS Binder Restocked!',   x: 520,  y: 160,  hp: 1.1, val: 480 },
+          { label: 'Sketchy Step Ladder', fixMsg: 'OSHA Step Stool Placed!', x: 760,  y: 210,  hp: 1.1, val: 480 },
+          { label: 'Exposed Wiring',      fixMsg: 'Locked Out & Tagged!',    x: 1410, y: 1120, hp: 1.2, val: 550 },
+          { label: 'No Air Scrubber',     fixMsg: 'HEPA Scrubber Online!',   x: 1140, y: 940,  hp: 1.2, val: 600 },
+        ],
+        inspectors: [
+          { name: 'OSHA Gary', x: 960, y: 480, vx: -115, vy: 85 },
+          { name: 'OSHA Brenda', x: 1520, y: 880, vx: 105, vy: -95 },
+          { name: 'Evil Roomba', x: 460, y: 460, vx: 130, vy: 110, isRoomba: true },
+        ],
+        clients: [
+          {
+            name: 'Aunt Gladys', role: '47-Cat Matriarch', avatar: '😿',
+            bodyColor: '#e879f9', shadeColor: '#a21caf',
+            x: 340, y: 290,
+            yell: 'WHERE IS MR. WHISKERS #34?!',
+            rant: '“Oh dear! All 47 of my sweet angels are at the pet spa, but are your cleaning chemicals going to hurt their tiny paws when they come home?!”',
+            choices: [
+              {
+                text: '“We use EPA-registered, pet-safe hospital disinfectants & HEPA filtration — 100% paw-safe!”',
+                outcome: 'good', delta: 450,
+                reply: '“Bless your heart, Hank! Mr. Whiskers #34 will be thrilled!”',
+                calmMsg: 'Gladys calmed! +$450'
+              },
+              {
+                text: '“Totally safe! Plus we’ll leave them one clean cardboard box to fight over.”',
+                outcome: 'ok', delta: 220,
+                reply: '“Hehe, you clearly understand cats. Carry on, young man!”',
+                calmMsg: 'Cat box strategy! +$220'
+              },
+              {
+                text: '“Ma’am, the ammonia in here could strip paint off a battleship — maybe switch to goldfish.”',
+                outcome: 'bad', delta: -150,
+                reply: '“HOW DARE YOU INSULT MY 47 BABIES!!”',
+                calmMsg: ''
+              }
+            ]
+          },
+          {
+            name: 'Landlord Carl', role: 'Sweating Property Manager', avatar: '🥵',
+            bodyColor: '#fb923c', shadeColor: '#c2410c',
+            x: 960, y: 220,
+            yell: 'MY DEPOSIT WON’T COVER THIS!!',
+            rant: '“I’VE GOT NEW TENANTS MOVING IN ON FRIDAY!! Can you even get this smell out or do I need a bulldozer?!”',
+            choices: [
+              {
+                text: '“No bulldozer needed Carl — we remediate to the subfloor, run ozone/hydroxyls, and verify with ATP testing.”',
+                outcome: 'good', delta: 500,
+                reply: '“ATP testing?! Music to my ears! Put me on a commercial contract!”',
+                calmMsg: 'Carl sold! +$500'
+              },
+              {
+                text: '“Give us 48 hours and a fresh coat of Kilz primer — it’ll smell like a brand-new Subaru.”',
+                outcome: 'ok', delta: 250,
+                reply: '“I DO love that new Subaru smell. Make it happen!”',
+                calmMsg: 'Carl convinced! +$250'
+              },
+              {
+                text: '“Yeah honestly Carl, I know a guy with a bulldozer if you want his number.”',
+                outcome: 'bad', delta: -150,
+                reply: '“MY BLOOD PRESSURE!! STOP SAYING BULLDOZER!!”',
+                calmMsg: ''
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const CLEAN_QUIPS = [
+      'ATP Swab: 0 RLU! ✨',
+      'Bagged & Tagged! ☣️',
+      'Smells like pine now! 🌲',
+      'Bio-One Certified! 💪',
+      'Sparkling clean! ✨'
+    ];
+
+    // ================= GAME STATE =================
+    let levelIdx = 0, running = false, score = 0, fines = 0, elapsed = 0;
+    let keys = {};
+    let joyDx = 0, joyDy = 0, joyMag = 0, touchActing = false;
+    let player = null, walls = [], ppeItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
+    let activeClient = null, talkCooldown = 0;
+    let particles = [], floaters = [];
+    let cam = { x: 0, y: 0 };
+    let fineCooldown = 0, scrubSoundCooldown = 0;
+    let currentRoomName = '';
+
+    function addFloater(x, y, text, color = '#fff') {
+      floaters.push({ x, y, text, color, life: 1.45 });
+    }
+
+    function spawnParticles(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const spd = 45 + Math.random() * 120;
+        particles.push({ x, y, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, r: 3 + Math.random() * 4, color, life: 0.45 + Math.random() * 0.35 });
+      }
+    }
+
+    function loadLevel(idx) {
+      levelIdx = idx % LEVELS.length;
+      const L = LEVELS[levelIdx];
+      walls = buildHouseWalls();
+      player = {
+        x: 160, y: 160, r: 21,
+        facing: 1,
+        suit: false, mask: false, gloves: false,
+        stepPhase: 0, moving: false, scrubbing: false
+      };
+      ppeItems = L.ppe.map((p) => ({ ...p, taken: false }));
+      hazards = L.hazards.map((h) => ({ ...h, progress: 0, done: false }));
+      oshas = L.oshas.map((o) => ({ ...o, progress: 0, done: false }));
+      inspectors = L.inspectors.map((g) => ({ ...g, r: 21, facing: 1, stepPhase: 0, speech: '', speechTimer: 0 }));
+      clients = (L.clients || []).map((c) => ({
+        ...c,
+        calmed: false,
+        facing: 1,
+        triedBad: {},
+        calmQuote: 'Thanks Hank! 5 stars! ⭐'
+      }));
+      activeClient = null;
+      talkCooldown = 0;
+      particles = []; floaters = [];
+      elapsed = 0; fines = 0; fineCooldown = 0;
+      cam.x = Math.max(0, Math.min(WORLD_W - VW, player.x - VW / 2));
+      cam.y = Math.max(0, Math.min(WORLD_H - VH, player.y - VH / 2));
+
+      document.getElementById('hud-level').textContent = L.name;
+      document.getElementById('win-overlay').classList.add('hidden');
+      document.getElementById('client-overlay').classList.add('hidden');
+      updateHud();
+    }
+
+    function openClientDialog(c) {
+      activeClient = c;
+      keys = {};
+      touchActing = false;
+      if (typeof resetJoy === 'function') resetJoy();
+      document.getElementById('dlg-avatar').textContent = c.avatar;
+      document.getElementById('dlg-name').textContent = c.name;
+      document.getElementById('dlg-role').textContent = c.role;
+      document.getElementById('dlg-rant').textContent = c.rant;
+      const resEl = document.getElementById('dlg-result');
+      resEl.className = 'dialog-result';
+      resEl.textContent = '';
+      document.getElementById('dlg-close').style.display = 'none';
+      renderClientChoices();
+      document.getElementById('client-overlay').classList.remove('hidden');
+      sfx('pickup');
+    }
+
+    function renderClientChoices() {
+      const c = activeClient;
+      if (!c) return;
+      const box = document.getElementById('dlg-choices');
+      box.innerHTML = '';
+      c.choices.forEach((ch, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.disabled = Boolean(c.triedBad[idx] || c.calmed);
+        btn.innerHTML = `<span class="choice-key">${idx + 1}</span><span>${ch.text}</span>`;
+        btn.onclick = () => pickClientChoice(idx);
+        box.appendChild(btn);
+      });
+    }
+
+    function pickClientChoice(idx) {
+      const c = activeClient;
+      if (!c || c.calmed || c.triedBad[idx]) return;
+      const ch = c.choices[idx];
+      if (!ch) return;
+      const resEl = document.getElementById('dlg-result');
+      score = Math.max(0, score + ch.delta);
+
+      if (ch.outcome === 'bad') {
+        c.triedBad[idx] = true;
+        sfx('whistle');
+        resEl.className = 'dialog-result show bad';
+        resEl.textContent = `🚨 ${ch.reply} (${ch.delta < 0 ? '-$' + Math.abs(ch.delta) : ''})`;
+        renderClientChoices();
+      } else {
+        c.calmed = true;
+        sfx('clean');
+        spawnParticles(c.x, c.y, ch.outcome === 'good' ? '#4ade80' : '#facc15', 24);
+        addFloater(c.x, c.y - 36, `✨ ${ch.calmMsg}`, ch.outcome === 'good' ? '#86efac' : '#fde047');
+        resEl.className = 'dialog-result show ' + ch.outcome;
+        resEl.textContent = `${ch.outcome === 'good' ? '⭐' : '😄'} ${ch.reply} (+$${ch.delta})`;
+        document.getElementById('dlg-close').style.display = 'inline-block';
+        renderClientChoices();
+      }
+      updateHud();
+    }
+
+    function closeClientDialog() {
+      activeClient = null;
+      talkCooldown = 0.5;
+      document.getElementById('client-overlay').classList.add('hidden');
+      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed)) {
+        showWin();
+      }
+    }
+
+    function ppeCount() { return (player.suit ? 1 : 0) + (player.mask ? 1 : 0) + (player.gloves ? 1 : 0); }
+
+    function updateHud() {
+      const pc = ppeCount();
+      const ppeEl = document.getElementById('hud-ppe');
+      ppeEl.className = 'stat-pill ' + (pc === 3 ? 'ppe-ok' : 'ppe-warn');
+      ppeEl.textContent = pc === 3 ? '🦺 PPE: 3/3 (OSHA Proof!)' : `🦺 PPE: ${pc}/3 (${pc === 0 ? 'Crocs Only!' : 'Find More!'})`;
+      document.getElementById('hud-clean').textContent = `🧹 Hazards: ${hazards.filter((h) => !h.done).length}`;
+      document.getElementById('hud-osha').textContent = `⚠️ OSHA: ${oshas.filter((o) => !o.done).length}`;
+      const remClients = clients.filter((c) => !c.calmed).length;
+      const cliEl = document.getElementById('hud-clients');
+      cliEl.textContent = remClients === 0 ? '😊 Clients: All Calm!' : `😰 Clients: ${remClients}`;
+      cliEl.style.borderColor = remClients === 0 ? 'rgba(34,197,94,0.6)' : 'rgba(232,121,249,0.55)';
+      cliEl.style.color = remClients === 0 ? '#86efac' : '#f0abfc';
+      document.getElementById('hud-score').textContent = `💵 $${score.toLocaleString()}`;
+      const m = Math.floor(elapsed / 60), s = Math.floor(elapsed % 60).toString().padStart(2, '0');
+      document.getElementById('hud-timer').textContent = `⏱ ${m}:${s}`;
+
+      const rm = HOUSE_ROOMS.find((r) => player.x >= r.x && player.x <= r.x + r.w && player.y >= r.y && player.y <= r.y + r.h);
+      if (rm && rm.name !== currentRoomName) {
+        currentRoomName = rm.name;
+        document.getElementById('room-banner').textContent = '📍 ' + rm.name.toUpperCase();
+      }
+    }
+
+    function collidesWall(nx, ny, r) {
+      for (const w of walls) {
+        const cx = Math.max(w.x, Math.min(nx, w.x + w.w));
+        const cy = Math.max(w.y, Math.min(ny, w.y + w.h));
+        if (Math.hypot(nx - cx, ny - cy) < r) return true;
+      }
+      return false;
+    }
+
+    function showWin() {
+      running = false;
+      sfx('win');
+      const L = LEVELS[levelIdx];
+      const grade = fines === 0 ? 'A+ (OSHA Legend!)' : fines === 1 ? 'B (Slap on Wrist)' : 'C- (Gary Wrote a Book)';
+      const timeBonus = Math.max(150, Math.round(900 - elapsed * 3));
+      score += timeBonus;
+      updateHud();
+      document.getElementById('win-title').textContent = `${L.name.split(':')[1] || 'HOUSE'} — SANITIZED!`;
+      document.getElementById('win-report').innerHTML = `
+        <div class="rc-row"><span>Clients De-Escalated</span><span style="color:#f0abfc;">${clients.length}/${clients.length} ⭐</span></div>
+        <div class="rc-row"><span>Speed Bonus</span><span style="color:#38bdf8;">+$${timeBonus}</span></div>
+        <div class="rc-row"><span>OSHA Citations</span><span style="color:${fines ? '#fca5a5' : '#4ade80'};">${fines}</span></div>
+        <div class="rc-row"><span>Compliance Grade</span><span style="color:#fde047;">${grade}</span></div>
+        <div class="rc-row"><span>Total Invoice Billed</span><span style="color:#4ade80;">$${score.toLocaleString()}.00</span></div>
+        <div class="rc-quote">${L.review}</div>
+      `;
+      document.getElementById('btn-next').textContent =
+        levelIdx < LEVELS.length - 1 ? 'NEXT DISPATCH →' : 'PLAY AGAIN FROM JOB 1 ↻';
+      document.getElementById('win-overlay').classList.remove('hidden');
+    }
+
+    function update(dt) {
+      if (!running || activeClient) return;
+      elapsed += dt;
+      if (fineCooldown > 0) fineCooldown -= dt;
+      if (scrubSoundCooldown > 0) scrubSoundCooldown -= dt;
+      if (talkCooldown > 0) talkCooldown -= dt;
+
+      let dx = 0, dy = 0;
+      if (keys['ArrowUp'] || keys['KeyW']) dy -= 1;
+      if (keys['ArrowDown'] || keys['KeyS']) dy += 1;
+      if (keys['ArrowLeft'] || keys['KeyA']) dx -= 1;
+      if (keys['ArrowRight'] || keys['KeyD']) dx += 1;
+      if (!dx && !dy && (Math.abs(joyDx) > 0.1 || Math.abs(joyDy) > 0.1)) {
+        dx = joyDx; dy = joyDy;
+      }
+
+      player.moving = Boolean(dx || dy);
+      if (dx || dy) {
+        const len = Math.hypot(dx, dy);
+        dx /= len; dy /= len;
+        if (dx !== 0) player.facing = dx > 0 ? 1 : -1;
+        const sprinting = keys['ShiftLeft'] || keys['ShiftRight'] || joyMag > 0.85;
+        const speed = sprinting ? 310 : 230;
+        const nx = player.x + dx * speed * dt;
+        const ny = player.y + dy * speed * dt;
+        if (!collidesWall(nx, player.y, player.r)) player.x = nx;
+        if (!collidesWall(player.x, ny, player.r)) player.y = ny;
+        player.stepPhase += dt * 14;
+      }
+
+      // Smooth Zelda-style camera follow!
+      const targetCamX = Math.max(0, Math.min(WORLD_W - VW, player.x - VW / 2));
+      const targetCamY = Math.max(0, Math.min(WORLD_H - VH, player.y - VH / 2));
+      cam.x += (targetCamX - cam.x) * Math.min(1, dt * 8.5);
+      cam.y += (targetCamY - cam.y) * Math.min(1, dt * 8.5);
+
+      // Auto-pickup PPE
+      for (const p of ppeItems) {
+        if (p.taken) continue;
+        if (Math.hypot(player.x - p.x, player.y - p.y) < 42) {
+          p.taken = true;
+          player[p.kind] = true;
+          score += 200;
+          sfx('pickup');
+          spawnParticles(p.x, p.y, '#38bdf8', 18);
+          addFloater(p.x, p.y - 20, `EQUIPPED ${p.label.toUpperCase()}! +$200`, '#7dd3fc');
+          if (ppeCount() === 3) addFloater(player.x, player.y - 44, 'FULL PPE! OSHA PROOF! 💪', '#4ade80');
+        }
+      }
+
+      // Update touch action button context (TALK vs SCRUB)
+      const nearClient = clients.some((c) => !c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76);
+      const actBtn = document.getElementById('btn-touch-act');
+      if (actBtn) {
+        actBtn.classList.toggle('talk-mode', nearClient);
+        document.getElementById('touch-act-icon').textContent = nearClient ? '💬' : '🧹';
+        document.getElementById('touch-act-label').textContent = nearClient ? 'TALK!' : 'SCRUB';
+      }
+
+      // Scrub / Fix OSHA / Talk to Freaking-Out Clients
+      const acting = keys['Space'] || keys['KeyE'] || touchActing;
+      player.scrubbing = false;
+      if (acting && talkCooldown <= 0) {
+        for (const c of clients) {
+          if (!c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76) {
+            c.facing = player.x >= c.x ? 1 : -1;
+            openClientDialog(c);
+            return;
+          }
+        }
+      }
+      if (acting) {
+        let target = null, isOsha = false;
+        for (const o of oshas) {
+          if (!o.done && Math.hypot(player.x - o.x, player.y - o.y) < 62) { target = o; isOsha = true; break; }
+        }
+        if (!target) {
+          for (const h of hazards) {
+            if (!h.done && Math.hypot(player.x - h.x, player.y - h.y) < 62) { target = h; break; }
+          }
+        }
+        if (target) {
+          if (!isOsha && target.kind === 'bio' && ppeCount() < 3) {
+            if (fineCooldown <= 0) {
+              fineCooldown = 2.0; fines += 1; score = Math.max(0, score - 200);
+              sfx('whistle');
+              addFloater(player.x, player.y - 36, '🚨 NEED FULL PPE! -$200', '#fca5a5');
+            }
+          } else {
+            player.scrubbing = true;
+            const rate = ppeCount() === 3 ? 1.2 : 0.85;
+            target.progress += dt * rate;
+            if (scrubSoundCooldown <= 0) {
+              scrubSoundCooldown = 0.085;
+              sfx('scrub');
+              spawnParticles(target.x, target.y, isOsha ? '#facc15' : '#38bdf8', 4);
+            }
+            if (target.progress >= target.hp) {
+              target.done = true;
+              score += target.val;
+              sfx('clean');
+              spawnParticles(target.x, target.y, '#4ade80', 22);
+              const msg = isOsha ? `✅ ${target.fixMsg} +$${target.val}` : `${CLEAN_QUIPS[Math.floor(Math.random() * CLEAN_QUIPS.length)]} +$${target.val}`;
+              addFloater(target.x, target.y - 18, msg, '#86efac');
+            }
+          }
+        }
+      }
+
+      // Roaming Inspectors / Raccoon / Roomba
+      for (const g of inspectors) {
+        const nx = g.x + g.vx * dt, ny = g.y + g.vy * dt;
+        if (collidesWall(nx, g.y, g.r)) g.vx = -g.vx; else g.x = nx;
+        if (collidesWall(g.x, ny, g.r)) g.vy = -g.vy; else g.y = ny;
+        if (g.vx !== 0) g.facing = g.vx > 0 ? 1 : -1;
+        g.stepPhase += dt * 11;
+        if (g.speechTimer > 0) g.speechTimer -= dt;
+
+        if (Math.hypot(player.x - g.x, player.y - g.y) < 72 && fineCooldown <= 0) {
+          if (g.isRaccoon) {
+            fineCooldown = 2.4; g.speech = 'HISS! MY TRASH!'; g.speechTimer = 1.8;
+            addFloater(g.x, g.y - 36, '🦝 Dave tried to steal your lunch!', '#fde047'); sfx('whistle');
+          } else if (g.isRoomba) {
+            fineCooldown = 2.2; g.speech = 'BEEP BOOP CHAOS!'; g.speechTimer = 1.6;
+            spawnParticles(g.x, g.y, '#f97316', 12);
+          } else if (ppeCount() < 3) {
+            fineCooldown = 2.6; fines += 1; score = Math.max(0, score - 250);
+            g.speech = 'SUS!! WHERE IS YOUR PPE?!'; g.speechTimer = 2.2;
+            sfx('whistle');
+            addFloater(g.x, g.y - 40, '🚨 OSHA CITATION -$250!', '#fca5a5');
+          } else {
+            fineCooldown = 3.4; g.speech = 'Looking sharp, Hank! 👍'; g.speechTimer = 1.8;
+          }
+        }
+      }
+
+      particles = particles.filter((p) => { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.93; p.vy *= 0.93; p.life -= dt; return p.life > 0; });
+      floaters = floaters.filter((f) => { f.y -= 30 * dt; f.life -= dt; return f.life > 0; });
+
+      updateHud();
+      if (hazards.every((h) => h.done) && oshas.every((o) => o.done) && clients.every((c) => c.calmed)) showWin();
+    }
+
+    // ================= AMONG US CREWMATE RENDERER =================
+    function drawBean(x, y, opts) {
+      const { bodyColor, shadeColor, facing = 1, stepPhase = 0, moving = false,
+              hasSuit = false, hasMask = false, hasGloves = false,
+              isHank = false, isInspector = false, isClient = false, panicking = false, scrubbing = false } = opts;
+
+      ctx.save();
+      const jitterX = panicking ? Math.sin(elapsed * 42 + x) * 2.5 : 0;
+      const jitterY = panicking ? Math.cos(elapsed * 36 + y) * 1.5 : 0;
+      ctx.translate(x + jitterX, y + jitterY);
+
+      // Soft ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.42)';
+      ctx.beginPath(); ctx.ellipse(0, 22, 22, 9, 0, 0, Math.PI * 2); ctx.fill();
+
+      const bob = moving ? Math.abs(Math.sin(stepPhase)) * -4.5 : Math.sin(elapsed * 3.5) * 1.2;
+      const legL = moving ? Math.sin(stepPhase) * 6 : 0;
+      const legR = moving ? -Math.sin(stepPhase) * 6 : 0;
+      ctx.translate(0, bob);
+
+      ctx.scale(facing, 1);
+      ctx.lineWidth = 3.5;
+      ctx.strokeStyle = '#0a0f18';
+      ctx.lineJoin = 'round';
+
+      // 1) Backpack (Among Us oxygen / hazmat pack!)
+      ctx.fillStyle = shadeColor;
+      roundRect(-25, -10, 13, 24, 6); ctx.fill(); ctx.stroke();
+
+      // 2) Stubby animated legs (Crocs if no suit!)
+      ctx.fillStyle = shadeColor;
+      roundRect(-13, 10 + legL * 0.4, 11, 13, 5); ctx.fill(); ctx.stroke();
+      roundRect(3, 10 + legR * 0.4, 11, 13, 5); ctx.fill(); ctx.stroke();
+
+      // 3) Chunky Among Us Bean Torso + Shading
+      ctx.fillStyle = shadeColor;
+      roundRect(-17, -24, 34, 39, 17); ctx.fill();
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.ellipse(-1, -8, 14, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+      roundRect(-17, -24, 34, 39, 17); ctx.stroke();
+
+      // Biohazard emblem on Hank's Tyvek suit
+      if (isHank && hasSuit) {
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath(); ctx.arc(2, 4, 4.5, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // 4) Visor / Face
+      if (hasMask || isInspector) {
+        // Glossy Among Us cyan visor!
+        ctx.fillStyle = '#5bb8d9';
+        roundRect(-2, -17, 21, 13, 6.5); ctx.fill();
+        ctx.fillStyle = '#bae6fd';
+        roundRect(1, -15, 14, 7, 4); ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.ellipse(11, -13, 4.2, 2.1, -0.2, 0, Math.PI * 2); ctx.fill();
+        roundRect(-2, -17, 21, 13, 6.5); ctx.stroke();
+
+        // Dual yellow P100 filter pods for Hank!
+        if (isHank && hasMask) {
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath(); ctx.arc(17, -4, 4.8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.arc(5, -4, 4.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        }
+      } else if (isHank) {
+        // Cute Highland Cow face peeking out before mask is found!
+        ctx.fillStyle = '#d96b27';
+        roundRect(-2, -17, 20, 14, 6); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.arc(5, -10, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(13, -10, 2.2, 0, Math.PI * 2); ctx.fill();
+      } else if (isClient) {
+        // Client face (wide panicked eyes + open screaming mouth, or chill happy eyes!)
+        ctx.fillStyle = '#fde68a';
+        roundRect(-2, -17, 20, 14, 6); ctx.fill(); ctx.stroke();
+        if (panicking) {
+          // Wide freaked-out eyes
+          ctx.fillStyle = '#fff';
+          ctx.beginPath(); ctx.arc(5, -11, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.beginPath(); ctx.arc(13, -11, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#0a0f18';
+          ctx.beginPath(); ctx.arc(5.5, -11, 1.4, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(13.5, -11, 1.4, 0, Math.PI * 2); ctx.fill();
+          // Screaming mouth
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath(); ctx.ellipse(9, -5.5, 3.8, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+          // Flying panic sweat drops!
+          ctx.fillStyle = '#38bdf8';
+          const dropY = (elapsed * 22) % 10;
+          ctx.beginPath(); ctx.arc(-18, -22 - dropY * 0.5, 3, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(22, -24 - dropY * 0.5, 2.8, 0, Math.PI * 2); ctx.fill();
+        } else {
+          // Chill happy eyes
+          ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 2.2;
+          ctx.beginPath(); ctx.arc(5, -10, 2.6, Math.PI, 0); ctx.stroke();
+          ctx.beginPath(); ctx.arc(13, -10, 2.6, Math.PI, 0); ctx.stroke();
+          ctx.beginPath(); ctx.arc(9, -7, 3.5, 0.15 * Math.PI, 0.85 * Math.PI); ctx.stroke();
+        }
+      }
+
+      // 5) Hank's Highland Cow Horns & Shaggy Orange Tuft on top!
+      if (isHank) {
+        ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 6.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-10, -21); ctx.quadraticCurveTo(-22, -31, -14, -38); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(10, -21); ctx.quadraticCurveTo(22, -31, 14, -38); ctx.stroke();
+        ctx.strokeStyle = '#e7c39c'; ctx.lineWidth = 3.5;
+        ctx.beginPath(); ctx.moveTo(-10, -21); ctx.quadraticCurveTo(-22, -31, -14, -38); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(10, -21); ctx.quadraticCurveTo(22, -31, 14, -38); ctx.stroke();
+        // Shaggy bangs
+        ctx.fillStyle = '#ea6c1e'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.ellipse(1, -23, 11, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      }
+
+      // Inspector Hard Hat + Clipboard
+      if (isInspector) {
+        ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, -22, 16, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+        roundRect(-18, -23, 36, 5, 2.5); ctx.fill(); ctx.stroke();
+        // Clipboard
+        ctx.fillStyle = '#b45309';
+        roundRect(14, -2, 11, 14, 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(16, 1, 7, 9);
+      }
+
+      // Floating Nitrile Gloved Hand + Spray Bottle when scrubbing!
+      if (hasGloves) {
+        const sw = scrubbing ? Math.sin(elapsed * 28) * 5 : 0;
+        ctx.fillStyle = '#38bdf8'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(20 + sw, 4, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (scrubbing) {
+          ctx.fillStyle = '#f97316';
+          roundRect(23 + sw, -5, 8, 12, 3); ctx.fill(); ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // ================= 2.5D ROOM & PROP RENDERING =================
+    function drawWorld() {
+      ctx.save();
+      ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
+
+      // 1) Distinct Room Floors
+      for (const rm of HOUSE_ROOMS) {
+        ctx.fillStyle = rm.floor;
+        ctx.fillRect(rm.x, rm.y, rm.w, rm.h);
+        ctx.fillStyle = rm.alt;
+        if (rm.style === 'checker' || rm.style === 'tile') {
+          const sz = rm.style === 'tile' ? 40 : 52;
+          for (let y = rm.y; y < rm.y + rm.h; y += sz) {
+            for (let x = rm.x; x < rm.x + rm.w; x += sz) {
+              if ((Math.floor((x - rm.x) / sz) + Math.floor((y - rm.y) / sz)) % 2 === 0) {
+                ctx.fillRect(x, y, Math.min(sz, rm.x + rm.w - x), Math.min(sz, rm.y + rm.h - y));
+              }
+            }
+          }
+        } else if (rm.style === 'wood') {
+          for (let y = rm.y; y < rm.y + rm.h; y += 26) {
+            ctx.fillRect(rm.x, y, rm.w, 2);
+          }
+        } else if (rm.style === 'concrete') {
+          ctx.strokeStyle = 'rgba(0,0,0,0.16)'; ctx.lineWidth = 2;
+          for (let x = rm.x + 120; x < rm.x + rm.w; x += 140) {
+            ctx.beginPath(); ctx.moveTo(x, rm.y); ctx.lineTo(x, rm.y + rm.h); ctx.stroke();
+          }
+        }
+        // Subtle room floor watermark label
+        ctx.font = '800 18px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.textAlign = 'center';
+        ctx.fillText(rm.name.toUpperCase(), rm.x + rm.w / 2, rm.y + rm.h / 2);
+      }
+
+      // 2) Furniture Props (2.5D shaded!)
+      for (const p of HOUSE_PROPS) {
+        ctx.save();
+        if (p.type === 'rug') {
+          ctx.fillStyle = p.color;
+          roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 4;
+          roundRect(p.x + 10, p.y + 10, p.w - 20, p.h - 20, 8); ctx.stroke();
+        } else if (p.type === 'couch') {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 10, p.w, p.h, 12); ctx.fill();
+          ctx.fillStyle = '#475569'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#64748b';
+          roundRect(p.x + 14, p.y + 12, p.w - 28, p.h - 20, 8); ctx.fill(); ctx.stroke();
+        } else if (p.type === 'bed') {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 10, p.w, p.h, 10); ctx.fill();
+          ctx.fillStyle = '#1e3a8a'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          roundRect(p.x, p.y, p.w, p.h, 10); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#e2e8f0';
+          roundRect(p.x + 14, p.y + 12, 68, 36, 8); ctx.fill(); ctx.stroke();
+          roundRect(p.x + 104, p.y + 12, 68, 36, 8); ctx.fill(); ctx.stroke();
+        } else if (p.type === 'tub') {
+          ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          roundRect(p.x, p.y, p.w, p.h, 24); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#7dd3fc';
+          roundRect(p.x + 14, p.y + 12, p.w - 28, p.h - 24, 18); ctx.fill();
+        } else if (p.type === 'boxes') {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(p.x + 6, p.y + 8, p.w, p.h);
+          ctx.fillStyle = '#a16207'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          ctx.fillRect(p.x, p.y, p.w, p.h); ctx.strokeRect(p.x, p.y, p.w, p.h);
+          ctx.fillStyle = '#ca8a04';
+          ctx.fillRect(p.x + 10, p.y + 10, p.w * 0.55, p.h * 0.5); ctx.strokeRect(p.x + 10, p.y + 10, p.w * 0.55, p.h * 0.5);
+        } else {
+          ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(p.x + 6, p.y + 8, p.w, p.h, 8); ctx.fill();
+          ctx.fillStyle = '#334155'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 3;
+          roundRect(p.x, p.y, p.w, p.h, 8); ctx.fill(); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      // 3) 2.5D Extruded Walls (wall front face + baseboard + bright top cap!)
+      for (const w of walls) {
+        // Floor drop shadow
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(w.x + 6, w.y + 8, w.w, w.h + 6);
+        // Front vertical 3D face
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(w.x, w.y, w.w, w.h);
+        // Top cap (lighter bevel for 2.5D depth)
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(w.x, w.y, w.w, Math.max(8, w.h - 10));
+        ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+        ctx.strokeRect(w.x, w.y, w.w, w.h);
+      }
+
+      // 4) Hazards (Custom cartoon vector art!)
+      for (const h of hazards) {
+        if (h.done) {
+          ctx.fillStyle = 'rgba(56, 189, 248, 0.1)';
+          ctx.beginPath(); ctx.arc(h.x, h.y, 26, 0, Math.PI * 2); ctx.fill();
+          continue;
+        }
+        const pulse = Math.sin(elapsed * 4.5 + h.x) * 2.5;
+        ctx.save();
+        if (h.kind === 'bio') {
+          ctx.fillStyle = '#22c55e'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.ellipse(h.x, h.y, 28 + pulse, 20 + pulse * 0.6, 0.2, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#86efac';
+          ctx.beginPath(); ctx.arc(h.x - 8, h.y - 4, 5, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(h.x + 10, h.y + 3, 3.5, 0, Math.PI * 2); ctx.fill();
+        } else if (h.kind === 'odor') {
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.65)'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(h.x - 10, h.y, 16 + pulse * 0.5, 0, Math.PI * 2);
+          ctx.arc(h.x + 10, h.y - 3, 15, 0, Math.PI * 2);
+          ctx.arc(h.x, h.y + 8, 14, 0, Math.PI * 2);
+          ctx.fill(); ctx.stroke();
+        } else {
+          // Chunky hoarding pile of boxes & papers
+          ctx.fillStyle = '#d97706'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+          roundRect(h.x - 24, h.y - 16, 26, 24, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#f59e0b';
+          roundRect(h.x - 4, h.y - 22, 26, 22, 4); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#fef3c7';
+          roundRect(h.x - 14, h.y - 4, 28, 18, 3); ctx.fill(); ctx.stroke();
+        }
+        ctx.font = '800 11.5px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#000'; ctx.fillText(h.label, h.x + 1, h.y + 35);
+        ctx.fillStyle = '#f8fafc'; ctx.fillText(h.label, h.x, h.y + 34);
+        if (h.progress > 0) drawProgressBar(h.x, h.y - 34, h.progress / h.hp, '#22c55e');
+        ctx.restore();
+      }
+
+      // 5) OSHA Violations (Flashing hazard ring + cartoon warning sign!)
+      for (const o of oshas) {
+        if (o.done) continue;
+        ctx.save();
+        ctx.strokeStyle = '#facc15'; ctx.lineWidth = 3; ctx.setLineDash([6, 5]);
+        ctx.beginPath(); ctx.arc(o.x, o.y, 29, 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        // Yellow triangle warning sign
+        ctx.fillStyle = '#facc15'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(o.x, o.y - 20); ctx.lineTo(o.x + 20, o.y + 15); ctx.lineTo(o.x - 20, o.y + 15); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#0a0f18'; ctx.font = '900 18px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('!', o.x, o.y + 3);
+        ctx.font = '800 11px sans-serif';
+        ctx.fillStyle = '#000'; ctx.fillText('OSHA: ' + o.label, o.x + 1, o.y + 35);
+        ctx.fillStyle = '#fde047'; ctx.fillText('OSHA: ' + o.label, o.x, o.y + 34);
+        if (o.progress > 0) drawProgressBar(o.x, o.y - 34, o.progress / o.hp, '#facc15');
+        ctx.restore();
+      }
+
+      // 6) PPE Pickups (Glowing cyan Bio-One supply crate + bouncing arrow!)
+      for (const p of ppeItems) {
+        if (p.taken) continue;
+        const bob = Math.sin(elapsed * 5 + p.x) * 5;
+        ctx.save();
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.beginPath(); ctx.arc(p.x, p.y, 28, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#0ea5e9'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+        roundRect(p.x - 18, p.y - 16 + bob, 36, 32, 9); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.font = '18px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(p.kind === 'suit' ? '🥼' : p.kind === 'mask' ? '😷' : '🧤', p.x, p.y + bob);
+        ctx.font = '900 11.5px sans-serif';
+        ctx.fillStyle = '#000'; ctx.fillText(p.label, p.x + 1, p.y + 32);
+        ctx.fillStyle = '#7dd3fc'; ctx.fillText(p.label, p.x, p.y + 31);
+        ctx.restore();
+      }
+
+      // 7) Depth-sorted Characters (Among Us Hank + Inspectors / Raccoon / Roomba!)
+      const actors = [
+        { y: player.y, draw: () => drawBean(player.x, player.y, {
+          bodyColor: player.suit ? '#f8fafc' : '#3b82f6',
+          shadeColor: player.suit ? '#cbd5e1' : '#1d4ed8',
+          facing: player.facing, stepPhase: player.stepPhase, moving: player.moving,
+          hasSuit: player.suit, hasMask: player.mask, hasGloves: player.gloves,
+          isHank: true, scrubbing: player.scrubbing
+        })},
+        ...clients.map((c) => ({ y: c.y, draw: () => {
+          const near = !c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76;
+          if (!c.calmed) {
+            // Pulsing panic aura
+            ctx.save();
+            ctx.strokeStyle = near ? '#38bdf8' : 'rgba(232, 121, 249, 0.75)';
+            ctx.lineWidth = near ? 3.5 : 2.5;
+            ctx.setLineDash([5, 4]);
+            ctx.beginPath(); ctx.arc(c.x, c.y + 4, 30 + Math.sin(elapsed * 8) * 2.5, 0, Math.PI * 2); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+          }
+          drawBean(c.x, c.y, {
+            bodyColor: c.bodyColor, shadeColor: c.shadeColor,
+            facing: player.x >= c.x ? 1 : -1,
+            stepPhase: c.calmed ? 0 : elapsed * 18,
+            moving: !c.calmed, isClient: true, panicking: !c.calmed
+          });
+          // Nameplate
+          ctx.font = '800 11px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillStyle = '#000'; ctx.fillText(c.name, c.x + 1, c.y + 37);
+          ctx.fillStyle = c.calmed ? '#86efac' : '#f0abfc'; ctx.fillText(c.name, c.x, c.y + 36);
+          // Speech bubble or Talk prompt
+          const bubbleText = c.calmed ? '✓ Calmed! ⭐' : (near ? '💬 Press E / SPACE to Talk!' : c.yell);
+          ctx.font = '800 11px sans-serif';
+          const tw = ctx.measureText(bubbleText).width + 16;
+          ctx.fillStyle = c.calmed ? 'rgba(10, 28, 22, 0.9)' : (near ? 'rgba(12, 34, 62, 0.96)' : 'rgba(30, 10, 38, 0.92)');
+          roundRect(c.x - tw / 2, c.y - 54, tw, 22, 8); ctx.fill();
+          ctx.strokeStyle = c.calmed ? '#22c55e' : (near ? '#38bdf8' : '#e879f9');
+          ctx.lineWidth = 1.6; ctx.stroke();
+          ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+          ctx.fillText(bubbleText, c.x, c.y - 43);
+        }})),
+        ...inspectors.map((g) => ({ y: g.y, draw: () => {
+          if (g.isRaccoon || g.isRoomba) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.38)'; ctx.beginPath(); ctx.ellipse(g.x, g.y + 15, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = g.isRaccoon ? '#475569' : '#1e293b'; ctx.strokeStyle = '#0a0f18'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(g.x, g.y, 19, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.font = '20px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(g.isRaccoon ? '🦝' : '🤖', g.x, g.y);
+            ctx.restore();
+          } else {
+            drawBean(g.x, g.y, {
+              bodyColor: '#ef4444', shadeColor: '#b91c1c',
+              facing: g.facing, stepPhase: g.stepPhase, moving: true, isInspector: true
+            });
+          }
+          ctx.font = '800 11px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillStyle = '#000'; ctx.fillText(g.name, g.x + 1, g.y + 36);
+          ctx.fillStyle = '#fca5a5'; ctx.fillText(g.name, g.x, g.y + 35);
+          if (g.speechTimer > 0 && g.speech) {
+            ctx.font = '800 11.5px sans-serif';
+            const tw = ctx.measureText(g.speech).width + 16;
+            ctx.fillStyle = 'rgba(8, 15, 28, 0.94)';
+            roundRect(g.x - tw / 2, g.y - 54, tw, 22, 8); ctx.fill();
+            ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.6; ctx.stroke();
+            ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+            ctx.fillText(g.speech, g.x, g.y - 43);
+          }
+        }}))
+      ];
+      actors.sort((a, b) => a.y - b.y);
+      actors.forEach((a) => a.draw());
+
+      // 8) Particles & Floating Popups
+      for (const p of particles) {
+        ctx.globalAlpha = Math.max(0, p.life * 1.4);
+        ctx.fillStyle = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      for (const f of floaters) {
+        ctx.globalAlpha = Math.min(1, f.life / 0.5);
+        ctx.font = '900 13.5px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#000'; ctx.fillText(f.text, f.x + 1.5, f.y + 1.5);
+        ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, f.y);
+      }
+      ctx.globalAlpha = 1;
+
+      ctx.restore();
+    }
+
+    function drawProgressBar(x, y, pct, color) {
+      const bw = 52, bh = 8;
+      ctx.fillStyle = '#0a0f18'; roundRect(x - bw / 2, y, bw, bh, 4); ctx.fill();
+      ctx.fillStyle = color; roundRect(x - bw / 2 + 1.5, y + 1.5, (bw - 3) * Math.min(1, pct), bh - 3, 3); ctx.fill();
+    }
+
+    // ================= ZELDA-STYLE DUNGEON MINIMAP =================
+    function drawMinimap() {
+      const compact = VW < 640;
+      const mw = compact ? 116 : 176, mh = compact ? 78 : 118;
+      const mx = VW - mw - 10, my = compact ? 34 : 14;
+      const sx = mw / WORLD_W, sy = mh / WORLD_H;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(6, 12, 24, 0.86)';
+      roundRect(mx - 6, my - 6, mw + 12, mh + 12, 12); ctx.fill();
+      ctx.strokeStyle = 'rgba(96, 165, 250, 0.45)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Rooms
+      for (const rm of HOUSE_ROOMS) {
+        ctx.fillStyle = 'rgba(30, 58, 108, 0.55)';
+        ctx.fillRect(mx + rm.x * sx, my + rm.y * sy, rm.w * sx - 1.5, rm.h * sy - 1.5);
+      }
+
+      // PPE dots (cyan)
+      for (const p of ppeItems) {
+        if (p.taken) continue;
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(mx + p.x * sx, my + p.y * sy, 3.8, 0, Math.PI * 2); ctx.fill();
+      }
+      // Hazard dots (green)
+      for (const h of hazards) {
+        if (h.done) continue;
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath(); ctx.arc(mx + h.x * sx, my + h.y * sy, 3.2, 0, Math.PI * 2); ctx.fill();
+      }
+      // OSHA dots (yellow)
+      for (const o of oshas) {
+        if (o.done) continue;
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath(); ctx.arc(mx + o.x * sx, my + o.y * sy, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+      // Client dots (magenta, pulsing if freaking out)
+      for (const c of clients) {
+        if (c.calmed) continue;
+        ctx.fillStyle = '#e879f9';
+        ctx.beginPath(); ctx.arc(mx + c.x * sx, my + c.y * sy, 4.0, 0, Math.PI * 2); ctx.fill();
+      }
+      // Inspector dots (red)
+      for (const g of inspectors) {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(mx + g.x * sx, my + g.y * sy, 3.5, 0, Math.PI * 2); ctx.fill();
+      }
+      // Hank (white + orange ring)
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(mx + player.x * sx, my + player.y * sy, 4.2, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#f97316'; ctx.lineWidth = 1.6; ctx.stroke();
+
+      ctx.restore();
+    }
+
+    let lastTs = 0;
+    function loop(ts) {
+      const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
+      lastTs = ts;
+      update(dt);
+      drawWorld();
+      drawMinimap();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(e.code)) e.preventDefault();
+      if (activeClient) {
+        if (e.code === 'Digit1') pickClientChoice(0);
+        else if (e.code === 'Digit2') pickClientChoice(1);
+        else if (e.code === 'Digit3') pickClientChoice(2);
+        else if ((e.code === 'Enter' || e.code === 'Space' || e.code === 'Escape') && activeClient.calmed) {
+          closeClientDialog();
+        }
+        return;
+      }
+      keys[e.code] = true;
+    });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+    document.getElementById('dlg-close').onclick = closeClientDialog;
+
+    // ================= MOBILE VIRTUAL JOYSTICK & ACTION BUTTON =================
+    const joyBase = document.getElementById('joy-base');
+    const joyStick = document.getElementById('joy-stick');
+    let joyPointerId = null;
+
+    function updateJoy(clientX, clientY) {
+      const rect = joyBase.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const maxR = rect.width * 0.36;
+      let dx = clientX - cx, dy = clientY - cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist > maxR) { dx = (dx / dist) * maxR; dy = (dy / dist) * maxR; }
+      joyStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+      joyDx = dx / maxR;
+      joyDy = dy / maxR;
+      joyMag = Math.min(1, dist / maxR);
+    }
+    function resetJoy() {
+      joyPointerId = null; joyDx = 0; joyDy = 0; joyMag = 0;
+      joyStick.style.transform = 'translate(-50%, -50%)';
+    }
+    joyBase.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      joyPointerId = e.pointerId;
+      joyBase.setPointerCapture(e.pointerId);
+      updateJoy(e.clientX, e.clientY);
+    });
+    joyBase.addEventListener('pointermove', (e) => {
+      if (e.pointerId !== joyPointerId) return;
+      e.preventDefault();
+      updateJoy(e.clientX, e.clientY);
+    });
+    joyBase.addEventListener('pointerup', (e) => { if (e.pointerId === joyPointerId) resetJoy(); });
+    joyBase.addEventListener('pointercancel', (e) => { if (e.pointerId === joyPointerId) resetJoy(); });
+
+    const touchActBtn = document.getElementById('btn-touch-act');
+    touchActBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      touchActing = true;
+      touchActBtn.classList.add('pressed');
+    });
+    const endTouchAct = () => { touchActing = false; touchActBtn.classList.remove('pressed'); };
+    touchActBtn.addEventListener('pointerup', endTouchAct);
+    touchActBtn.addEventListener('pointercancel', endTouchAct);
+    touchActBtn.addEventListener('pointerleave', endTouchAct);
+
+    document.getElementById('btn-start').onclick = () => {
+      document.getElementById('start-overlay').classList.add('hidden');
+      score = 0; loadLevel(0); running = true;
+    };
+    document.getElementById('btn-replay').onclick = () => { loadLevel(levelIdx); running = true; };
+    document.getElementById('btn-next').onclick = () => {
+      if (levelIdx >= LEVELS.length - 1) score = 0;
+      loadLevel((levelIdx + 1) % LEVELS.length);
+      running = true;
+    };
+
+    loadLevel(0);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
