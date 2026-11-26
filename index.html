@@ -2186,8 +2186,11 @@
       // 4) Draw Each 3D Billboard Clipped Against Wall Z-Buffer (labels drawn unclipped after!)
       const fpLabels = [];
       for (const s of visibleSprites) {
-        const scale = Math.min(3.4, (1.45 * projPlane) / (s.dist * 10.5));
-        const halfW = Math.max(18, 42 * scale);
+        const isBigChar = (s.type === 'client' || (s.type === 'enemy' && !s.item.isRaccoon && !s.item.isRoomba && !s.item.isRoach && !s.item.isCat));
+        const isSmallCritter = (s.type === 'enemy' && (s.item.isRaccoon || s.item.isRoomba || s.item.isRoach || s.item.isCat));
+        const baseFactor = isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
+        const scale = Math.min(5.8, (baseFactor * projPlane) / s.dist);
+        const halfW = Math.max(24, 34 * scale);
         const startCol = Math.max(0, Math.floor((s.screenX - halfW) / stripW));
         const endCol = Math.min(numRays - 1, Math.ceil((s.screenX + halfW) / stripW));
 
@@ -2210,7 +2213,7 @@
         if (s.type === 'client') {
           const c = s.item;
           ctx.save();
-          ctx.translate(s.screenX, floorY - 24 * scale);
+          ctx.translate(s.screenX, floorY - 26 * scale);
           ctx.scale(scale, scale);
           drawBean(0, 0, {
             bodyColor: c.bodyColor, shadeColor: c.shadeColor, facing: 1,
@@ -2218,13 +2221,13 @@
             isClient: true, panicking: !c.calmed, charName: c.name
           });
           ctx.restore();
-          const near = !c.calmed && s.dist < 110;
+          const near = !c.calmed && s.dist < 130;
           const lbl = c.calmed ? `${c.name} ✓` : (near ? `💬 [E / SPACE] Talk to ${c.name}` : `${c.name}: ${c.yell}`);
-          fpLabels.push({ x: s.screenX, y: floorY - 78 * scale, text: lbl, color: c.calmed ? '#86efac' : (near ? '#7dd3fc' : '#f0abfc') });
+          fpLabels.push({ x: s.screenX, y: floorY - 68 * scale, text: lbl, color: c.calmed ? '#86efac' : (near ? '#7dd3fc' : '#f0abfc') });
         } else if (s.type === 'enemy') {
           const g = s.item;
           ctx.save();
-          ctx.translate(s.screenX, floorY - (g.isRaccoon || g.isRoomba || g.isRoach || g.isCat ? 16 : 24) * scale);
+          ctx.translate(s.screenX, floorY - (isSmallCritter ? 18 : 26) * scale);
           ctx.scale(scale, scale);
           const fakeG = { ...g, x: 0, y: 0 };
           if (g.isRaccoon) drawRaccoon(fakeG);
@@ -2238,10 +2241,10 @@
           });
           ctx.restore();
           const msg = (g.speechTimer > 0 && g.speech) ? g.speech : g.name;
-          fpLabels.push({ x: s.screenX, y: floorY - 74 * scale, text: msg, color: '#fca5a5' });
+          fpLabels.push({ x: s.screenX, y: floorY - (isSmallCritter ? 46 : 68) * scale, text: msg, color: '#fca5a5' });
         } else if (s.type === 'ppe') {
           const p = s.item;
-          const bob = Math.sin(elapsed * 5 + p.x) * 6 * scale;
+          const bob = Math.sin(elapsed * 5 + p.x) * 4 * scale;
           ctx.save();
           ctx.translate(s.screenX, floorY - 22 * scale + bob);
           ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
@@ -2251,7 +2254,7 @@
           ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(p.kind === 'suit' ? '🥼' : p.kind === 'mask' ? '😷' : '🧤', 0, 0);
           ctx.restore();
-          fpLabels.push({ x: s.screenX, y: floorY - 52 * scale + bob, text: p.label, color: '#7dd3fc' });
+          fpLabels.push({ x: s.screenX, y: floorY - 46 * scale + bob, text: p.label, color: '#7dd3fc' });
         } else if (s.type === 'osha') {
           const o = s.item;
           ctx.save();
@@ -2263,10 +2266,10 @@
           ctx.fillStyle = '#090514'; ctx.font = `900 ${Math.round(18 * scale)}px sans-serif`;
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 3 * scale);
           ctx.restore();
-          fpLabels.push({ x: s.screenX, y: floorY - 50 * scale, text: 'OSHA: ' + o.label, color: '#fde047', prog: o.progress > 0 ? o.progress / o.hp : 0, progCol: '#facc15' });
+          fpLabels.push({ x: s.screenX, y: floorY - 46 * scale, text: 'OSHA: ' + o.label, color: '#fde047', prog: o.progress > 0 ? o.progress / o.hp : 0, progCol: '#facc15' });
         } else if (s.type === 'tool') {
           const t = s.item;
-          const bob = Math.sin(elapsed * 5 + t.x) * 6 * scale;
+          const bob = Math.sin(elapsed * 5 + t.x) * 4 * scale;
           ctx.save();
           ctx.translate(s.screenX, floorY - 20 * scale + bob);
           ctx.fillStyle = 'rgba(255, 122, 0, 0.26)';
@@ -2276,7 +2279,7 @@
           ctx.font = `${Math.round(18 * scale)}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(t.icon, 0, 0);
           ctx.restore();
-          fpLabels.push({ x: s.screenX, y: floorY - 50 * scale + bob, text: '🧰 ' + t.label, color: '#fdba74' });
+          fpLabels.push({ x: s.screenX, y: floorY - 46 * scale + bob, text: '🧰 ' + t.label, color: '#fdba74' });
         } else if (s.type === 'dumpster') {
           ctx.save();
           ctx.translate(s.screenX, floorY - 22 * scale);
@@ -2286,32 +2289,32 @@
           ctx.fillStyle = '#facc15'; ctx.font = `900 ${Math.round(10 * scale)}px sans-serif`;
           ctx.textAlign = 'center'; ctx.fillText('BIO-ONE', 0, 8 * scale);
           ctx.restore();
-          fpLabels.push({ x: s.screenX, y: floorY - 54 * scale, text: player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', color: '#86efac' });
+          fpLabels.push({ x: s.screenX, y: floorY - 50 * scale, text: player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', color: '#86efac' });
         } else if (s.type === 'hazard') {
           const h = s.item;
           ctx.save();
           ctx.translate(s.screenX, floorY - 12 * scale);
           if (h.kind === 'bio') {
             ctx.fillStyle = '#22c55e'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.5 * scale);
-            ctx.beginPath(); ctx.ellipse(0, 6 * scale, 28 * scale, 11 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#86efac'; ctx.beginPath(); ctx.arc(-8 * scale, 4 * scale, 4 * scale, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(0, 4 * scale, 32 * scale, 13 * scale, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#86efac'; ctx.beginPath(); ctx.arc(-9 * scale, 2 * scale, 4.5 * scale, 0, Math.PI * 2); ctx.fill();
           } else if (h.kind === 'odor') {
             ctx.fillStyle = 'rgba(168, 85, 247, 0.72)'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.2 * scale);
             ctx.beginPath();
-            ctx.arc(-10 * scale, -4 * scale, 15 * scale, 0, Math.PI * 2);
-            ctx.arc(10 * scale, -7 * scale, 14 * scale, 0, Math.PI * 2);
-            ctx.arc(0, 3 * scale, 13 * scale, 0, Math.PI * 2);
+            ctx.arc(-11 * scale, -6 * scale, 17 * scale, 0, Math.PI * 2);
+            ctx.arc(11 * scale, -9 * scale, 16 * scale, 0, Math.PI * 2);
+            ctx.arc(0, 2 * scale, 15 * scale, 0, Math.PI * 2);
             ctx.fill(); ctx.stroke();
           } else {
             ctx.fillStyle = '#d97706'; ctx.strokeStyle = '#090514'; ctx.lineWidth = Math.max(1.5, 2.4 * scale);
-            roundRect(-22 * scale, -12 * scale, 24 * scale, 22 * scale, 4 * scale); ctx.fill(); ctx.stroke();
+            roundRect(-24 * scale, -14 * scale, 26 * scale, 24 * scale, 4 * scale); ctx.fill(); ctx.stroke();
             ctx.fillStyle = '#f59e0b';
-            roundRect(-2 * scale, -18 * scale, 24 * scale, 22 * scale, 4 * scale); ctx.fill(); ctx.stroke();
+            roundRect(-2 * scale, -20 * scale, 26 * scale, 24 * scale, 4 * scale); ctx.fill(); ctx.stroke();
           }
           ctx.restore();
           const tTag = h.reqTool ? ` [${TOOL_META[h.reqTool].icon}${h.haul ? '→🗑️' : ''}]` : '';
           fpLabels.push({
-            x: s.screenX, y: floorY - 42 * scale,
+            x: s.screenX, y: floorY - 38 * scale,
             text: h.label + tTag,
             color: (h.reqTool && !player.tools[h.reqTool]) ? '#fdba74' : '#f8fafc',
             prog: h.progress > 0 ? h.progress / h.hp : 0, progCol: '#22c55e'
