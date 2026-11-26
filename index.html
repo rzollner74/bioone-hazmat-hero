@@ -272,6 +272,15 @@
       padding:7px 10px; border:1px solid #64748b; border-radius:8px; background:#0f172aed;
       color:#f1f5f9; font-size:12px; line-height:1.35; pointer-events:none; }
     @media (max-width:700px) { .job-guide { top:38px; left:8px; max-width:66%; padding:5px 7px; font-size:11px; } }
+    .aim-cue { position:absolute; z-index:3; top:55%; left:50%; transform:translateX(-50%);
+      width:max-content; max-width:min(64%,300px); padding:7px 11px; border:1px solid #64748b;
+      border-radius:10px; background:#0b1524ed; color:#cbd5e1; pointer-events:none; text-align:center;
+      font-size:12px; line-height:1.3; box-shadow:0 4px 16px #0007; }
+    .aim-cue[hidden] { display:none; }
+    .aim-cue strong { display:block; margin-bottom:2px; color:#fff; }
+    .aim-cue.ready { border-color:#86efac; color:#bbf7d0; }
+    .aim-cue.blocked { border-color:#fcd34d; color:#fde68a; }
+    .act-btn.target-ready { outline:2px solid #86efac; outline-offset:3px; }
   </style>
 </head>
 <body>
@@ -303,6 +312,9 @@
     <canvas id="game" width="1024" height="640"></canvas>
     <div class="room-banner" id="room-banner">📍 FRONT FOYER</div>
     <div class="job-guide" id="job-guide" aria-live="polite"></div>
+    <div class="aim-cue" id="aim-cue" hidden>
+      <strong id="aim-name"></strong><span id="aim-hint"></span>
+    </div>
 
     <div class="touch-controls" id="touch-controls">
       <div class="joy-base" id="joy-base">
@@ -392,6 +404,7 @@
 
     // Large Zelda-style multi-room house world!
     const WORLD_W = 1920, WORLD_H = 1280;
+    const FP_WALL_HEIGHT = 92; // Shared projection scale: a full room-height wall.
     const WALL_DEPTH = 26; // 2.5D extruded wall face height!
 
     // ================= PIXAR-STYLE 3D SPRITE SHEET & REALISTIC WALL TEXTURES =================
@@ -423,8 +436,14 @@
       handSprayer: 'assets/fp-sprayer.webp',
       handScoop: 'assets/fp-scoop.webp',
       handBag: 'assets/fp-bag.webp',
+      cleanTubArt: 'assets/fixture-clean-tub.webp',
+      vanityArt: 'assets/fixture-vanity.webp',
+      islandArt: 'assets/fixture-island.webp',
+      benchArt: 'assets/fixture-bench.webp',
+      bedArt: 'assets/fixture-bed.webp',
+      counterArt: 'assets/fixture-counter.webp',
     };
-    const SPRITE_VERSION = 'view-3';
+    const SPRITE_VERSION = 'aim-and-fixtures-4';
     const SPRITES = {};
     for (const [k, url] of Object.entries(SPRITE_URLS)) {
       const img = new Image();
@@ -576,25 +595,25 @@
     const HOUSE_PROPS = [
       // Living room couch, rug, TV
       { type: 'rug', x: 170, y: 240, w: 280, h: 170, color: '#6b2c2c' },
-      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 154, fpW: 98, fpH: 41, solid: true },
-      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 92, fpW: 49, fpH: 45, solid: true },
-      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 37, fpH: 40 },
-      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 62, fpW: 42, fpH: 60 },
+      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 154, fpW: 82, fpH: 48, solid: true },
+      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 92, fpW: 54, fpH: 53, solid: true },
+      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 46, fpH: 51 },
+      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 62, fpW: 48, fpH: 65 },
       // Kitchen island & fridge
-      { type: 'counter', x: 820, y: 100, w: 290, h: 58 },
-      { type: 'island', x: 860, y: 310, w: 200, h: 86 },
+      { type: 'counter', x: 820, y: 100, w: 290, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37 },
+      { type: 'island', x: 860, y: 310, w: 200, h: 86, art: 'islandArt', size: 137, fpW: 66, fpH: 36 },
       // Garage workbench & shelving
-      { type: 'counter', x: 1460, y: 95, w: 280, h: 55 },
-      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 75, fpW: 46, fpH: 64 },
+      { type: 'counter', x: 1460, y: 95, w: 280, h: 55, art: 'benchArt', size: 154, fpW: 90, fpH: 37 },
+      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 75, fpW: 52, fpH: 67 },
       // Bedroom bed & rug
       { type: 'rug', x: 150, y: 820, w: 300, h: 200, color: '#2b3e63' },
-      { type: 'bed', x: 105, y: 980, w: 190, h: 155 },
+      { type: 'bed', x: 105, y: 980, w: 190, h: 155, art: 'bedArt', size: 134, fpW: 69, fpH: 40 },
       // Bathroom tub & vanity
-      { type: 'tub', x: 1050, y: 740, w: 165, h: 85 },
-      { type: 'counter', x: 740, y: 1130, w: 210, h: 54 },
+      { type: 'tub', x: 1050, y: 740, w: 165, h: 85, art: 'cleanTubArt', size: 111, fpW: 67, fpH: 31 },
+      { type: 'counter', x: 740, y: 1130, w: 210, h: 54, art: 'vanityArt', size: 113, fpW: 58, fpH: 38 },
       // Basement crates
-      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 81, fpW: 47, fpH: 32 },
-      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 88, fpW: 54, fpH: 35 },
+      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 81, fpW: 55, fpH: 37 },
+      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 88, fpW: 59, fpH: 40 },
     ];
 
     const SOLID_PROPS = HOUSE_PROPS.filter((p) => p.solid);
@@ -612,7 +631,7 @@
     const LEVELS = [
       {
         name: 'Job 1: The Saturday Spill',
-        guide: 'Start here: grab the blue gloves and orange rags near the entry, then hold E or Scrub at each mess.',
+        guide: 'Start here: grab the gloves and rags. In 3D, aim toward the mess until the marker turns green, then hold E or Scrub.',
         review: '“The only thing left on the floor is my dignity.”',
         ppe: [{ kind: 'gloves', label: 'Nitrile Gloves', x: 125, y: 239 }],
         tools: [{ kind: 'rags', x: 190, y: 261 }],
@@ -875,6 +894,8 @@
     let player = null, walls = [], ppeItems = [], toolItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
     let activeClient = null, talkCooldown = 0, toolWarnCooldown = 0;
     let colliders = [];
+    let fpAim = null;
+    const FP_REACH = 150;
     let particles = [], floaters = [];
     let cam = { x: 0, y: 0 };
     let fineCooldown = 0, scrubSoundCooldown = 0;
@@ -927,6 +948,8 @@
       document.getElementById('job-guide').textContent = L.guide;
       currentRoomName = '';
       toolWarnCooldown = 0;
+      fpAim = null;
+      syncAimCue();
       document.getElementById('win-overlay').classList.add('hidden');
       document.getElementById('client-overlay').classList.add('hidden');
       updateHud();
@@ -1167,14 +1190,20 @@
         addFloater(DUMPSTER.x, DUMPSTER.y - 24, '🗑️ HAULED TO DUMPSTER! +$250', '#86efac');
       }
 
-      // Update touch action button context (TALK vs SCRUB)
-      const nearClient = clients.some((c) => !c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76);
+      // Gameplay and the screen cue use the same selection, so a green marker always works.
+      fpAim = viewMode === 'fp' ? getFPAimTarget() : null;
+      const nearClient = viewMode === 'fp'
+        ? fpAim?.type === 'client' && fpAim.inReach
+        : clients.some((c) => !c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76);
       const actBtn = document.getElementById('btn-touch-act');
       if (actBtn) {
-        actBtn.classList.toggle('talk-mode', nearClient);
+        actBtn.classList.toggle('talk-mode', !!nearClient);
+        actBtn.classList.toggle('target-ready', !!(fpAim?.inReach && !fpAim.blocker));
         document.getElementById('touch-act-icon').textContent = nearClient ? '💬' : '🧹';
         document.getElementById('touch-act-label').textContent = nearClient ? 'TALK!' : 'SCRUB';
       }
+
+      syncAimCue();
 
       // Scrub / Fix OSHA / Talk to Freaking-Out Clients
       const acting = keys['Space'] || keys['KeyE'] || touchActing;
@@ -1182,7 +1211,7 @@
       player.activeTool = null;
       if (acting && talkCooldown <= 0) {
         for (const c of clients) {
-          if (!c.calmed && Math.hypot(player.x - c.x, player.y - c.y) < 76) {
+          if (!c.calmed && (viewMode === 'fp' ? nearClient && fpAim.item === c : Math.hypot(player.x - c.x, player.y - c.y) < 76)) {
             c.facing = player.x >= c.x ? 1 : -1;
             openClientDialog(c);
             return;
@@ -1191,12 +1220,19 @@
       }
       if (acting) {
         let target = null, isOsha = false;
-        for (const o of oshas) {
-          if (!o.done && Math.hypot(player.x - o.x, player.y - o.y) < 62) { target = o; isOsha = true; break; }
-        }
-        if (!target) {
-          for (const h of hazards) {
-            if (!h.done && Math.hypot(player.x - h.x, player.y - h.y) < 62) { target = h; break; }
+        if (viewMode === 'fp') {
+          if (fpAim?.inReach && fpAim.type !== 'client') {
+            target = fpAim.item;
+            isOsha = fpAim.type === 'osha';
+          }
+        } else {
+          for (const o of oshas) {
+            if (!o.done && Math.hypot(player.x - o.x, player.y - o.y) < 62) { target = o; isOsha = true; break; }
+          }
+          if (!target) {
+            for (const h of hazards) {
+              if (!h.done && Math.hypot(player.x - h.x, player.y - h.y) < 62) { target = h; break; }
+            }
           }
         }
         if (target) {
@@ -2356,12 +2392,63 @@
     }
 
     // ================= 3D FIRST-PERSON RAYCAST ENGINE =================
-    function castRay(ox, oy, dx, dy) {
+    function getFPAimTarget() {
+      let best = null;
+      const ca = Math.cos(player.angle), sa = Math.sin(player.angle);
+      const candidates = [
+        ...hazards.filter((h) => !h.done).map((item) => ({ item, type: 'hazard', reach: FP_REACH })),
+        ...oshas.filter((o) => !o.done).map((item) => ({ item, type: 'osha', reach: FP_REACH })),
+        ...clients.filter((c) => !c.calmed).map((item) => ({ item, type: 'client', reach: 108 })),
+      ];
+      for (const candidate of candidates) {
+        const { item, type, reach } = candidate;
+        const dx = item.x - player.x, dy = item.y - player.y, dist = Math.hypot(dx, dy);
+        if (dist > 355) continue;
+        const fwd = dx * ca + dy * sa, side = Math.abs(-dx * sa + dy * ca);
+        // A forgiving horizontal aim zone lets the floor-level item sit below the eye line.
+        const angle = dist <= 6 ? 0 : Math.atan2(side, fwd);
+        const tolerance = dist < 75 ? 0.40 : 0.25;
+        if (dist > 6 && (fwd <= 0 || angle > tolerance)) continue;
+        if (dist > 6 && castRay(player.x, player.y, dx / dist, dy / dist, colliders).dist < dist - 5) continue;
+        const inReach = dist <= reach;
+        const rank = angle + dist * 0.00055 + (inReach ? 0 : 0.65);
+        if (best && rank >= best.rank) continue;
+        let blocker = '';
+        if (type === 'hazard') {
+          if ((item.reqPpe || []).some((kind) => !player[kind])) blocker = 'Pick up the blue gloves';
+          else if (item.kind === 'bio' && ppeCount() < 3) blocker = 'Find all three PPE items';
+          else if (item.requiresCheck && oshas.some((o) => !o.done && o.label === item.requiresCheck)) blocker = 'Clear the safety flag: ' + item.requiresCheck;
+          else if (item.haul && player.carryingTrash) blocker = 'Drop your bag at the dumpster first';
+        }
+        if (!blocker && item.reqTool && !player.tools[item.reqTool]) blocker = 'Pick up: ' + TOOL_META[item.reqTool].name;
+        best = { item, type, rank, inReach, blocker };
+      }
+      return best;
+    }
+
+    function syncAimCue() {
+      const el = document.getElementById('aim-cue');
+      const aim = viewMode === 'fp' && running ? fpAim : null;
+      el.hidden = !aim;
+      if (!aim) return;
+      const name = aim.item.label || aim.item.name;
+      const hint = !aim.inReach ? 'Move a little closer'
+        : aim.blocker || (aim.type === 'client' ? 'Press E or tap Talk'
+          : aim.type === 'osha' ? 'Hold E or hold Scrub to fix'
+          : 'Hold E or hold Scrub to clean');
+      const nameEl = document.getElementById('aim-name'), hintEl = document.getElementById('aim-hint');
+      if (nameEl.textContent !== name) nameEl.textContent = name;
+      if (hintEl.textContent !== hint) hintEl.textContent = hint;
+      el.classList.toggle('ready', aim.inReach && !aim.blocker);
+      el.classList.toggle('blocked', aim.inReach && !!aim.blocker);
+    }
+
+    function castRay(ox, oy, dx, dy, geometry = walls) {
       let bestT = 2600, hitSide = 0, hitU = 0;
       const invDx = dx === 0 ? 1e9 : 1 / dx;
       const invDy = dy === 0 ? 1e9 : 1 / dy;
-      for (let i = 0; i < walls.length; i++) {
-        const w = walls[i];
+      for (let i = 0; i < geometry.length; i++) {
+        const w = geometry[i];
         let t1 = (w.x - ox) * invDx, t2 = (w.x + w.w - ox) * invDx;
         let tminX = Math.min(t1, t2), tmaxX = Math.max(t1, t2);
         let t3 = (w.y - oy) * invDy, t4 = (w.y + w.h - oy) * invDy;
@@ -2412,7 +2499,7 @@
         const perpDist = Math.max(8, hit.dist * Math.cos(rayAngle - player.angle));
         zBuf[i] = perpDist;
 
-        const wallH = (92 * projPlane) / perpDist;
+        const wallH = (FP_WALL_HEIGHT * projPlane) / perpDist;
         const top = horizon - wallH * 0.52;
         const x = i * stripW;
         const texX = ((Math.floor(hit.u * 1.4) % 256) + 256) % 256;
@@ -2459,9 +2546,9 @@
       for (const s of visibleSprites) {
         const isBigChar = (s.type === 'client' || (s.type === 'enemy' && !s.item.isRaccoon && !s.item.isRoomba && !s.item.isRoach && !s.item.isCat));
         const isSmallCritter = (s.type === 'enemy' && (s.item.isRaccoon || s.item.isRoomba || s.item.isRoach || s.item.isCat));
-        const baseFactor = isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
+        const baseFactor = s.type === 'prop' ? 1 : isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
         // Foreground limits preserve the room's scale when Hank walks right up to a billboard.
-        const limit = s.type === 'prop' ? (VH * 0.48 / s.item.fpH)
+        const limit = s.type === 'prop' ? (VH * 0.56 / s.item.fpH)
           : s.type === 'hazard' ? (VH * 0.28 / 48) : 5.8;
         const scale = Math.min(5.8, limit, (baseFactor * projPlane) / s.dist);
         const halfW = Math.max(24, (s.type === 'prop' ? s.item.fpW / 2 : (s.type === 'hazard' ? 52 : 36)) * scale);
@@ -2478,7 +2565,7 @@
         }
         if (!visibleRuns.length) continue;
 
-        const floorY = horizon + (44 * projPlane) / s.dist;
+        const floorY = horizon + (FP_WALL_HEIGHT * 0.48 * projPlane) / s.dist;
         ctx.save();
         ctx.beginPath();
         for (const [x, w] of visibleRuns) ctx.rect(x, 0, w, VH);
@@ -2569,6 +2656,18 @@
           fpLabels.push({ x: s.screenX, y: floorY - 50 * scale, text: player.carryingTrash ? '🗑️ DROP TRASH HERE!' : '🗑️ BIO-ONE DUMPSTER', color: '#86efac' });
         } else if (s.type === 'hazard') {
           const h = s.item;
+          if (fpAim?.item === h) {
+            ctx.save();
+            const marker = fpAim.inReach ? (fpAim.blocker ? '#fde68a' : '#86efac') : '#67e8f9';
+            ctx.strokeStyle = marker;
+            ctx.lineWidth = 2.6;
+            ctx.shadowColor = marker;
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.ellipse(s.screenX, floorY - 1, Math.max(16, 35 * scale), Math.max(5, 9 * scale), 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.restore();
+          }
           ctx.save();
           ctx.translate(s.screenX, floorY - 12 * scale);
           const artHeight = drawMessArt(h, 0, 12 * scale, scale);
@@ -2658,7 +2757,8 @@
 
       // Center arcade crosshair
       const cx = VW / 2, cy = VH / 2;
-      ctx.strokeStyle = 'rgba(0, 240, 255, 0.78)'; ctx.lineWidth = 2;
+      ctx.strokeStyle = fpAim?.inReach ? (fpAim.blocker ? '#fde68a' : '#86efac') : 'rgba(0, 240, 255, 0.78)';
+      ctx.lineWidth = fpAim ? 2.8 : 2;
       ctx.beginPath();
       ctx.moveTo(cx - 8, cy); ctx.lineTo(cx - 3, cy);
       ctx.moveTo(cx + 3, cy); ctx.lineTo(cx + 8, cy);
@@ -2674,8 +2774,9 @@
       const bobY = Math.abs(walk) * 8 - Math.abs(effort) * 6;
       if (hand) {
         const toolShown = heldKey === 'handSprayer' || heldKey === 'handScoop' || heldKey === 'handRag';
-        const [w, h] = artDimensions(hand, VW * (toolShown ? 0.34 : 0.25), VH * (toolShown ? 0.40 : 0.30));
-        const x = VW + 22 - w + bobX;
+        const extend = player.scrubbing ? 1.11 : 1;
+        const [w, h] = artDimensions(hand, VW * (toolShown ? 0.30 : 0.22) * extend, VH * (toolShown ? 0.37 : 0.28) * extend);
+        const x = VW + (toolShown ? 22 : 9) - w + bobX;
         const y = VH - h + bobY + 5;
         ctx.drawImage(hand, x, y, w, h);
         if (player.scrubbing && player.activeTool === 'sprayer') {
@@ -2728,6 +2829,8 @@
 
     function toggleViewMode() {
       viewMode = viewMode === 'fp' ? 'top' : 'fp';
+      fpAim = null;
+      syncAimCue();
       document.getElementById('btn-view-toggle').textContent = viewMode === 'fp' ? '👁️ 3D FP' : '🗺️ 2D MAP';
       addFloater(player.x, player.y - 36, viewMode === 'fp' ? '👁️ 3D FIRST-PERSON MODE!' : '🗺️ 2D TOP-DOWN MODE!', '#00f0ff');
     }
