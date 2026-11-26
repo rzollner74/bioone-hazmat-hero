@@ -10,25 +10,25 @@
   <title>Bio-One Highlands: Hazmat Hero</title>
   <style>
     :root {
-      --bg: #0b0618;
-      --panel: rgba(18, 10, 38, 0.92);
-      --border: rgba(0, 240, 255, 0.34);
-      --pink: #ff2e97;
-      --orange: #ff7a00;
-      --blue: #00f0ff;
-      --green: #39ff14;
-      --yellow: #ffe600;
-      --red: #ff3355;
+      --bg: #07101e;
+      --panel: rgba(11, 22, 42, 0.92);
+      --border: rgba(147, 197, 253, 0.28);
+      --pink: #e879f9;
+      --orange: #f97316;
+      --blue: #38bdf8;
+      --green: #22c55e;
+      --yellow: #facc15;
+      --red: #ef4444;
       --text: #f8fafc;
-      --muted: #b8a9d9;
+      --muted: #94a3b8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     html, body {
       width: 100%; height: 100%; height: 100dvh; overflow: hidden;
       background:
-        radial-gradient(circle at 20% 10%, rgba(255, 46, 151, 0.22) 0%, transparent 45%),
-        radial-gradient(circle at 80% 90%, rgba(0, 240, 255, 0.16) 0%, transparent 50%),
-        linear-gradient(180deg, #120826 0%, #070412 100%);
+        radial-gradient(circle at 18% 12%, rgba(56, 189, 248, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 85% 88%, rgba(249, 115, 22, 0.12) 0%, transparent 48%),
+        linear-gradient(180deg, #0d1d36 0%, #060d19 100%);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", sans-serif;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -72,21 +72,9 @@
       max-height: 77vh;
       border-radius: 20px;
       overflow: hidden;
-      border: 2.5px solid rgba(255, 46, 151, 0.6);
-      box-shadow: 0 0 28px rgba(255, 46, 151, 0.24), 0 0 46px rgba(0, 240, 255, 0.16), 0 26px 70px rgba(0, 0, 0, 0.75);
-      background: #0d0818;
-    }
-    .stage-wrap::after {
-      content: "";
-      position: absolute; inset: 0;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0) 0px,
-        rgba(255, 255, 255, 0) 2px,
-        rgba(0, 0, 0, 0.11) 3px,
-        rgba(0, 0, 0, 0.11) 4px
-      );
-      pointer-events: none; z-index: 6;
+      border: 2px solid rgba(147, 197, 253, 0.34);
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+      background: #0b1322;
     }
 
     canvas { width: 100%; height: 100%; display: block; }
@@ -123,11 +111,10 @@
     }
     .overlay.hidden { display: none; }
     .overlay h1 {
-      font-size: clamp(26px, 4vw, 42px); font-weight: 900; letter-spacing: 0.04em;
-      font-style: italic; text-transform: uppercase;
-      background: linear-gradient(180deg, #00f0ff 0%, #ffffff 42%, #ff2e97 58%, #ffe600 100%);
+      font-size: clamp(26px, 3.8vw, 40px); font-weight: 900; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 0%, #bae6fd 52%, #f97316 100%);
       -webkit-background-clip: text; background-clip: text; color: transparent;
-      filter: drop-shadow(0 0 14px rgba(255, 46, 151, 0.55));
+      filter: drop-shadow(0 6px 20px rgba(56, 189, 248, 0.35));
     }
     .overlay p { max-width: 580px; color: #cbd5e1; font-size: 14px; line-height: 1.55; }
     .btn {
@@ -286,9 +273,11 @@
 <body>
   <div class="hud">
     <div class="hud-brand">
-      <div class="bio-badge">☣️</div>
+      <div class="bio-badge" style="overflow:hidden;padding:0;background:#0f1f3a;">
+        <img src="assets/hank.png" alt="Hank" style="width:100%;height:100%;object-fit:cover;object-position:top;" onerror="this.style.display='none'" />
+      </div>
       <div>
-        <div class="hud-title">BIO-ONE HIGHLANDS · HAZMAT HERO '86</div>
+        <div class="hud-title">BIO-ONE HIGHLANDS · HAZMAT HERO</div>
         <div class="hud-sub" id="hud-level">Job 1: The Hoarder's Split-Level</div>
       </div>
     </div>
@@ -320,12 +309,12 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-      <div style="font-size:46px;">📼🐮☣️🕹️</div>
-      <h1>HAZMAT HERO '86</h1>
+      <img src="assets/hank.png" alt="Hank" style="width:116px;height:116px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6));" onerror="this.style.display='none'" />
+      <h1>HAZMAT HERO</h1>
       <p>
-        Walk through a <strong>3D First-Person 1980s hoarder house</strong> as <strong>Hank</strong> (or tap <strong>👁️ 3D FP</strong> to switch to Top-Down)!
-        Grab your <strong>PPE</strong>, scrub <strong>biohazards</strong> with Chem 1/2/4, fix <strong>OSHA violations</strong>,
-        calm <strong>freaking-out clients</strong>, and dodge <strong>OSHA Gary, Raccoon Dave, Roachzilla &amp; Adjuster Chad</strong>!
+        Walk through a <strong>3D First-Person hoarder house</strong> as <strong>Hank</strong> (or tap <strong>👁️ 3D FP</strong> for Top-Down)!
+        Find your <strong>PPE</strong> and <strong>Bio-One tools</strong> (Pump Sprayer, Rags, Shovel, Air Scrubber, Negative Air Barrier),
+        haul trash to the <strong>Garage Dumpster</strong>, calm <strong>freaking-out clients</strong>, and dodge <strong>OSHA Gary &amp; Raccoon Dave</strong>!
       </p>
       <button class="btn" id="btn-start">ENTER IN 3D FIRST-PERSON →</button>
       <div style="font-size:12px; color:#94a3b8;">
@@ -398,6 +387,66 @@
     // Large Zelda-style multi-room house world!
     const WORLD_W = 1920, WORLD_H = 1280;
     const WALL_DEPTH = 26; // 2.5D extruded wall face height!
+
+    // ================= PIXAR-STYLE 3D SPRITE SHEET & REALISTIC WALL TEXTURES =================
+    const SPRITE_URLS = {
+      hank: 'assets/hank.png',
+      inspector: 'assets/inspector.png',
+      raccoon: 'assets/raccoon.png',
+    };
+    const SPRITES = {};
+    for (const [k, url] of Object.entries(SPRITE_URLS)) {
+      const img = new Image();
+      img.src = url + '?v=3';
+      SPRITES[k] = img;
+    }
+
+    function spriteReady(key) {
+      const img = SPRITES[key];
+      return img && img.complete && img.naturalWidth > 0 ? img : null;
+    }
+
+    function getClientSpriteKey(name) {
+      if (name.includes('Dave')) return 'dave';
+      if (name.includes('Karen') || name.includes('Gladys')) return 'karen';
+      if (name.includes('Ricky') || name.includes('Carl')) return 'ricky';
+      return 'dave';
+    }
+
+    // Build realistic 256x256 architectural wall texture (warm plaster + oak wainscoting + molding!)
+    const WALL_TEX = document.createElement('canvas');
+    WALL_TEX.width = 256; WALL_TEX.height = 256;
+    (function buildWallTex() {
+      const c = WALL_TEX.getContext('2d');
+      // Warm drywall upper section with soft studio lighting gradient
+      const upG = c.createLinearGradient(0, 0, 0, 172);
+      upG.addColorStop(0, '#d8d2c7');
+      upG.addColorStop(0.5, '#cdc5b8');
+      upG.addColorStop(1, '#b8afa0');
+      c.fillStyle = upG; c.fillRect(0, 0, 256, 172);
+      // Subtle plaster grain
+      for (let i = 0; i < 650; i++) {
+        c.fillStyle = i % 2 ? 'rgba(255,255,255,0.06)' : 'rgba(60,48,36,0.05)';
+        c.fillRect((i * 73) % 256, (i * 41) % 168, 2, 2);
+      }
+      // Crisp white crown molding at top
+      c.fillStyle = '#f3f1ec'; c.fillRect(0, 0, 256, 14);
+      c.fillStyle = '#a89f91'; c.fillRect(0, 14, 256, 3);
+      // Warm oak chair rail
+      c.fillStyle = '#7c5534'; c.fillRect(0, 166, 256, 10);
+      c.fillStyle = '#9c6e46'; c.fillRect(0, 166, 256, 3);
+      // Lower wood wainscoting panels
+      const loG = c.createLinearGradient(0, 176, 0, 236);
+      loG.addColorStop(0, '#6b472a'); loG.addColorStop(1, '#52341d');
+      c.fillStyle = loG; c.fillRect(0, 176, 256, 60);
+      for (let x = 0; x < 256; x += 32) {
+        c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(x, 176, 2, 60);
+        c.fillStyle = 'rgba(255,220,180,0.12)'; c.fillRect(x + 2, 176, 2, 60);
+      }
+      // Crisp white baseboard at bottom
+      c.fillStyle = '#e7e4dc'; c.fillRect(0, 236, 256, 20);
+      c.fillStyle = '#9e9588'; c.fillRect(0, 236, 256, 2);
+    })();
 
     // ================= PROCEDURAL SFX =================
     let audioCtx = null;
@@ -480,12 +529,12 @@
     }
 
     const HOUSE_ROOMS = [
-      { id: 'foyer',    name: 'Front Foyer & Living Room', x: 40,   y: 40,  w: 600, h: 600, floor: '#4a3225', alt: '#573b2c', style: 'wood' },
-      { id: 'kitchen',  name: 'The 1986 Kitchen',          x: 666,  y: 40,  w: 614, h: 600, floor: '#1b3842', alt: '#264d59', style: 'checker' },
-      { id: 'garage',   name: 'Hoarder Garage',            x: 1306, y: 40,  w: 574, h: 600, floor: '#1e1b2e', alt: '#27233b', style: 'concrete' },
-      { id: 'bedroom',  name: 'Shag-Carpet Bedroom',       x: 40,   y: 666, w: 600, h: 574, floor: '#3e2148', alt: '#4d2959', style: 'carpet' },
-      { id: 'bathroom', name: 'Aqua-Tile Bathroom',        x: 666,  y: 666, w: 614, h: 574, floor: '#163c44', alt: '#1f4f59', style: 'tile' },
-      { id: 'basement', name: 'The Mystery Basement',      x: 1306, y: 666, w: 574, h: 574, floor: '#19142a', alt: '#211b36', style: 'concrete' },
+      { id: 'foyer',    name: 'Front Foyer & Living Room', x: 40,   y: 40,  w: 600, h: 600, floor: '#543c2c', alt: '#614634', style: 'wood' },
+      { id: 'kitchen',  name: 'The Kitchen',               x: 666,  y: 40,  w: 614, h: 600, floor: '#344754', alt: '#3f5666', style: 'checker' },
+      { id: 'garage',   name: 'Hoarder Garage',            x: 1306, y: 40,  w: 574, h: 600, floor: '#373e47', alt: '#414954', style: 'concrete' },
+      { id: 'bedroom',  name: 'Master Bedroom',            x: 40,   y: 666, w: 600, h: 574, floor: '#473d52', alt: '#534860', style: 'carpet' },
+      { id: 'bathroom', name: 'Biohazard Bathroom',        x: 666,  y: 666, w: 614, h: 574, floor: '#2a4a52', alt: '#345a63', style: 'tile' },
+      { id: 'basement', name: 'The Mystery Basement',      x: 1306, y: 666, w: 574, h: 574, floor: '#2e333c', alt: '#373d47', style: 'concrete' },
     ];
 
     const HOUSE_PROPS = [
@@ -813,7 +862,13 @@
       keys = {};
       touchActing = false;
       if (typeof resetJoy === 'function') resetJoy();
-      document.getElementById('dlg-avatar').textContent = c.avatar;
+      const sKey = getClientSpriteKey(c.name);
+      const avEl = document.getElementById('dlg-avatar');
+      if (spriteReady(sKey)) {
+        avEl.innerHTML = `<img src="${SPRITE_URLS[sKey]}?v=3" alt="${c.name}" style="width:100%;height:100%;object-fit:contain;" />`;
+      } else {
+        avEl.textContent = c.avatar;
+      }
       document.getElementById('dlg-name').textContent = c.name;
       document.getElementById('dlg-role').textContent = c.role;
       document.getElementById('dlg-rant').textContent = c.rant;
@@ -1212,6 +1267,20 @@
       ctx.beginPath(); ctx.ellipse(0, 26, 23, 9, 0, 0, Math.PI * 2); ctx.fill();
 
       const bob = moving ? Math.abs(Math.sin(stepPhase)) * -3.5 : Math.sin(elapsed * 3.2) * 0.9;
+      // High-res Pixar-style 3D sprite rendering when available!
+      const sKey = isHank ? 'hank' : (isClient ? getClientSpriteKey(charName) : (isInspector ? (charName.includes('Chad') ? 'chad' : 'inspector') : null));
+      const sImg = sKey ? spriteReady(sKey) : null;
+      if (sImg) {
+        ctx.translate(0, bob);
+        ctx.scale(facing, 1);
+        const tilt = panicking ? Math.sin(elapsed * 26) * 0.08 : (moving ? Math.sin(stepPhase) * 0.05 : 0);
+        ctx.rotate(tilt);
+        const drawH = 68;
+        const drawW = drawH * (sImg.naturalWidth / sImg.naturalHeight);
+        ctx.drawImage(sImg, -drawW / 2, -drawH + 25, drawW, drawH);
+        ctx.restore();
+        return;
+      }
       const stride = moving ? Math.sin(stepPhase) * 7.5 : 0;
       const armSwing = panicking ? Math.sin(elapsed * 26) * 7 : (moving ? Math.sin(stepPhase) * 6 : 0);
       ctx.translate(0, bob);
@@ -1500,6 +1569,25 @@
 
     // ================= LIFELIKE HAND-DRAWN RACCOON DAVE & 3D ROOMBA =================
     function drawRaccoon(g) {
+      const rImg = spriteReady('raccoon');
+      if (rImg) {
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        ctx.fillStyle = 'rgba(0,0,0,0.42)';
+        ctx.beginPath(); ctx.ellipse(0, 19, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+        const bob = Math.abs(Math.sin(g.stepPhase * 1.3)) * -4;
+        ctx.translate(0, bob);
+        ctx.scale(g.facing || 1, 1);
+        ctx.rotate(Math.sin(g.stepPhase) * 0.08);
+        const dh = 54, dw = dh * (rImg.naturalWidth / rImg.naturalHeight);
+        ctx.drawImage(rImg, -dw / 2, -dh + 20, dw, dh);
+        if (g.stolenLoot) {
+          ctx.font = '16px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(g.stolenLoot === 'suit' ? '🥼' : g.stolenLoot === 'mask' ? '😷' : '🧤', 18, -10);
+        }
+        ctx.restore();
+        return;
+      }
       ctx.save();
       ctx.translate(g.x, g.y);
       ctx.scale(g.facing || 1, 1);
@@ -1582,6 +1670,21 @@
 
 
     function drawRoach(g) {
+      const roImg = spriteReady('roach');
+      if (roImg) {
+        ctx.save();
+        ctx.translate(g.x, g.y);
+        ctx.fillStyle = 'rgba(0,0,0,0.4)';
+        ctx.beginPath(); ctx.ellipse(0, 18, 20, 7, 0, 0, Math.PI * 2); ctx.fill();
+        const bob = Math.abs(Math.sin(elapsed * 18)) * -3;
+        ctx.translate(0, bob);
+        ctx.scale(g.facing || 1, 1);
+        ctx.rotate(Math.sin(elapsed * 22) * 0.09);
+        const dh = 52, dw = dh * (roImg.naturalWidth / roImg.naturalHeight);
+        ctx.drawImage(roImg, -dw / 2, -dh + 19, dw, dh);
+        ctx.restore();
+        return;
+      }
       ctx.save();
       ctx.translate(g.x, g.y);
       ctx.scale(g.facing || 1, 1);
@@ -1773,21 +1876,18 @@
         ctx.restore();
       }
 
-      // 3) 2.5D Extruded Walls (80s synth-slate face + glowing neon trim!)
+      // 3) 2.5D Extruded Walls (Warm Architectural Drywall + Wood Trim!)
       for (const w of walls) {
         // Floor drop shadow
-        ctx.fillStyle = 'rgba(0,0,0,0.42)';
+        ctx.fillStyle = 'rgba(0,0,0,0.38)';
         ctx.fillRect(w.x + 6, w.y + 8, w.w, w.h + 6);
         // Front vertical 3D face
-        ctx.fillStyle = '#241744';
+        ctx.fillStyle = '#5c4738';
         ctx.fillRect(w.x, w.y, w.w, w.h);
-        // Top cap (synth purple-slate bevel)
-        ctx.fillStyle = '#3b2566';
+        // Top cap (clean architectural drywall bevel)
+        ctx.fillStyle = '#d6cfc4';
         ctx.fillRect(w.x, w.y, w.w, Math.max(8, w.h - 10));
-        // Subtle 80s neon cyan top highlight line
-        ctx.fillStyle = 'rgba(0, 240, 255, 0.45)';
-        ctx.fillRect(w.x + 2, w.y + 2, Math.max(0, w.w - 4), 2.5);
-        ctx.strokeStyle = '#090514'; ctx.lineWidth = 3;
+        ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2.5;
         ctx.strokeRect(w.x, w.y, w.w, w.h);
       }
 
@@ -2103,23 +2203,23 @@
       const bobY = player.moving ? Math.sin(player.stepPhase * 1.1) * 5.5 : Math.sin(elapsed * 2.5) * 1.2;
       const horizon = halfH + bobY;
 
-      // 1) Ceiling & Perspective Floor Gradients (room-aware tint!)
+      // 1) Warm Realistic Ceiling & Perspective Floor Gradients
       const rm = HOUSE_ROOMS.find((r) => player.x >= r.x && player.x <= r.x + r.w && player.y >= r.y && player.y <= r.y + r.h);
       const ceilG = ctx.createLinearGradient(0, 0, 0, horizon);
-      ceilG.addColorStop(0, '#140b29');
-      ceilG.addColorStop(1, '#261844');
+      ceilG.addColorStop(0, '#47433d');
+      ceilG.addColorStop(1, '#262320');
       ctx.fillStyle = ceilG;
       ctx.fillRect(0, 0, VW, horizon);
 
       const floorG = ctx.createLinearGradient(0, horizon, 0, VH);
-      floorG.addColorStop(0, '#120d1d');
-      floorG.addColorStop(0.35, rm ? rm.floor : '#332924');
-      floorG.addColorStop(1, rm ? rm.alt : '#4a3a30');
+      floorG.addColorStop(0, '#181512');
+      floorG.addColorStop(0.32, rm ? rm.floor : '#4a3225');
+      floorG.addColorStop(1, rm ? rm.alt : '#5e4232');
       ctx.fillStyle = floorG;
       ctx.fillRect(0, horizon, VW, VH - horizon);
 
-      // 2) Raycast 3D Textured Walls + Z-Buffer
-      const stripW = VW > 720 ? 4 : 3;
+      // 2) Raycast Texture-Mapped 3D Walls (Drywall + Wainscoting + Molding!) + Z-Buffer
+      const stripW = VW > 720 ? 3 : 3;
       const numRays = Math.ceil(VW / stripW);
       const zBuf = new Float32Array(numRays);
       const projPlane = (VW / 2) / Math.tan(fov / 2);
@@ -2135,29 +2235,16 @@
         const wallH = (92 * projPlane) / perpDist;
         const top = horizon - wallH * 0.52;
         const x = i * stripW;
-        const fog = Math.max(0.18, 1 - perpDist / 1150);
+        const texX = ((Math.floor(hit.u * 1.4) % 256) + 256) % 256;
 
-        // Paneling / seam texture along wall
-        const panelSeam = (Math.floor(hit.u / 36) % 2 === 0);
-        const seamLine = (Math.abs(hit.u % 36) < 2.2);
-        let r = hit.side === 0 ? 78 : 56;
-        let g = hit.side === 0 ? 60 : 44;
-        let b = hit.side === 0 ? 118 : 92;
-        if (panelSeam) { r += 10; g += 8; b += 12; }
-        if (seamLine) { r -= 24; g -= 20; b -= 28; }
+        ctx.drawImage(WALL_TEX, texX, 0, 2, 256, x, top, stripW + 0.6, wallH);
 
-        ctx.fillStyle = `rgb(${Math.round(r * fog)},${Math.round(g * fog)},${Math.round(b * fog)})`;
-        ctx.fillRect(x, top, stripW + 0.5, wallH);
-
-        // Top 80s neon cyan molding trim
-        const trimH = Math.max(2, wallH * 0.045);
-        ctx.fillStyle = `rgba(0, 240, 255, ${(0.55 * fog).toFixed(2)})`;
-        ctx.fillRect(x, top, stripW + 0.5, trimH);
-
-        // Dark wood baseboard along bottom
-        const baseH = Math.max(3, wallH * 0.09);
-        ctx.fillStyle = `rgb(${Math.round(30 * fog)},${Math.round(20 * fog)},${Math.round(45 * fog)})`;
-        ctx.fillRect(x, top + wallH - baseH, stripW + 0.5, baseH);
+        // Realistic directional & distance shading overlay
+        const shade = Math.min(0.76, (hit.side === 1 ? 0.16 : 0) + (perpDist / 1250) * 0.68);
+        if (shade > 0.02) {
+          ctx.fillStyle = `rgba(12, 16, 26, ${shade.toFixed(2)})`;
+          ctx.fillRect(x, top, stripW + 0.6, wallH);
+        }
       }
 
       // 3) Collect All 3D Billboards (Characters, Clients, Bad Guys, Hazards, OSHA, PPE, Tools, Dumpster!)
