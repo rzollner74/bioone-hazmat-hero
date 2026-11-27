@@ -295,6 +295,22 @@
     .aim-cue.ready { border-color:#86efac; color:#bbf7d0; }
     .aim-cue.blocked { border-color:#fcd34d; color:#fde68a; }
     .act-btn.target-ready { outline:2px solid #86efac; outline-offset:3px; }
+    @keyframes pulse3d {
+      0%, 100% {
+        box-shadow: 0 0 8px rgba(0, 240, 255, 0.55), 0 0 18px rgba(56, 189, 248, 0.35);
+        transform: scale(1);
+      }
+      50% {
+        box-shadow: 0 0 16px rgba(0, 240, 255, 0.95), 0 0 30px rgba(56, 189, 248, 0.65);
+        transform: scale(1.07);
+      }
+    }
+    .btn-3d-pulse {
+      animation: pulse3d 1.7s ease-in-out infinite;
+      border-color: rgba(0, 240, 255, 0.9) !important;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.38), rgba(0, 240, 255, 0.28)) !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -318,7 +334,7 @@
       <div class="stat-pill" style="color:#4ade80;" id="hud-score">💵 $0</div>
       <div class="stat-pill" id="hud-timer">⏱ 0:00</div>
       <button class="stat-pill" id="btn-sound-toggle" type="button" style="cursor:pointer; border-color:rgba(147,197,253,0.45); background:rgba(255,255,255,0.08); color:#e2e8f0;">🔊 Sound</button>
-      <button class="stat-pill" id="btn-view-toggle" type="button" style="cursor:pointer; border-color:rgba(0,240,255,0.65); background:rgba(0,240,255,0.16); color:#7dd3fc;">👁️ 3D FP</button>
+      <button class="stat-pill btn-3d-pulse" id="btn-view-toggle" type="button" style="cursor:pointer; border-color:rgba(0,240,255,0.65); background:rgba(0,240,255,0.16); color:#7dd3fc;">👁️ Try 3D!</button>
     </div>
   </div>
 
@@ -915,7 +931,7 @@
 
     // ================= GAME STATE =================
     let levelIdx = 0, running = false, score = 0, fines = 0, elapsed = 0;
-    let viewMode = 'fp'; // 'fp' = 3D First-Person, 'top' = 2.5D Top-Down
+    let viewMode = 'top'; // 'top' = 2.5D Top-Down (default), 'fp' = 3D First-Person
     let keys = {};
     let joyDx = 0, joyDy = 0, joyMag = 0, touchActing = false;
     let player = null, walls = [], ppeItems = [], toolItems = [], hazards = [], oshas = [], inspectors = [], clients = [];
@@ -2877,16 +2893,23 @@
     document.getElementById('btn-sound-toggle').onclick = toggleSound;
     updateSoundBtn();
 
+    function updateViewBtn() {
+      const btn = document.getElementById('btn-view-toggle');
+      if (!btn) return;
+      btn.textContent = viewMode === 'fp' ? '🗺️ 2D Map' : '👁️ Try 3D!';
+      btn.classList.toggle('btn-3d-pulse', viewMode !== 'fp');
+    }
     function toggleViewMode() {
       viewMode = viewMode === 'fp' ? 'top' : 'fp';
       resetGameInput();
       syncGameInput(true);
       fpAim = null;
       syncAimCue();
-      document.getElementById('btn-view-toggle').textContent = viewMode === 'fp' ? '👁️ 3D FP' : '🗺️ 2D MAP';
+      updateViewBtn();
       addFloater(player.x, player.y - 36, viewMode === 'fp' ? '👁️ 3D FIRST-PERSON MODE!' : '🗺️ 2D TOP-DOWN MODE!', '#00f0ff');
     }
     document.getElementById('btn-view-toggle').onclick = toggleViewMode;
+    updateViewBtn();
 
     // Swipe / drag on canvas to look around in First-Person 3D mode!
     let lookPointerId = null, lastLookX = 0, actionPointerId = null;
