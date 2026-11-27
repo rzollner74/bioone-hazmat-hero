@@ -673,33 +673,41 @@
     const LEVELS = [
       {
         name: 'Job 1: The Saturday Spill',
-        guide: 'Start here: grab the gloves and rags. In 3D, aim toward the mess until the marker turns green, then hold E or Scrub.',
+        guide: 'Grab gloves, a suit, and a respirator, then pick up the rags. In 3D, aim at a mess until the marker turns green, then hold E or Scrub.',
         review: '“The only thing left on the floor is my dignity.”',
-        ppe: [{ kind: 'gloves', label: 'Nitrile Gloves', x: 125, y: 239 }],
+        ppe: [
+          { kind: 'gloves', label: 'Nitrile Gloves', x: 125, y: 239 },
+          { kind: 'suit', label: 'Tyvek Suit', x: 375, y: 231 },
+          { kind: 'mask', label: 'P100 Respirator', x: 212, y: 183 },
+        ],
         tools: [{ kind: 'rags', x: 190, y: 261 }],
         hazards: [
-          { kind: 'hoard', label: 'The Great Nacho Avalanche', x: 302, y: 328, hp: 0.8, val: 80, reqTool: 'rags', reqPpe: ['gloves'] },
-          { kind: 'hoard', art: 'sludgeArt', label: 'Soda: Now Part of the Floor', x: 429, y: 395, hp: 1.0, val: 100, reqTool: 'rags', reqPpe: ['gloves'] },
+          { kind: 'hoard', label: 'The Great Nacho Avalanche', x: 302, y: 328, hp: 0.8, val: 80, reqTool: 'rags' },
+          { kind: 'hoard', art: 'sludgeArt', label: 'Soda: Now Part of the Floor', x: 429, y: 395, hp: 1.0, val: 100, reqTool: 'rags' },
         ],
         oshas: [], inspectors: [], clients: [],
       },
       {
         name: 'Job 2: The Garage of Regret',
-        guide: 'Grab gloves, rags and the shovel. Clear the blocked exit and take one bag at a time to the garage dumpster.',
+        guide: 'Suit up with gloves, a suit, and a respirator. Grab the rags and shovel, clear the blocked exit, then haul bags to the garage dumpster.',
         review: '“We can finally open the garage. Can you do my junk drawer next?”',
-        ppe: [{ kind: 'gloves', label: 'Nitrile Gloves', x: 128, y: 264 }],
+        ppe: [
+          { kind: 'gloves', label: 'Nitrile Gloves', x: 128, y: 264 },
+          { kind: 'suit', label: 'Tyvek Suit', x: 430, y: 211 },
+          { kind: 'mask', label: 'P100 Respirator', x: 492, y: 408 },
+        ],
         tools: [{ kind: 'rags', x: 193, y: 282 }, { kind: 'shovel', x: 1395, y: 293 }],
         hazards: [
-          { kind: 'hoard', label: 'Three Decades of Warranty Cards', x: 540, y: 357, hp: 1.2, val: 150, reqTool: 'rags', reqPpe: ['gloves'] },
-          { kind: 'hoard', label: 'Pizza Box Penthouse', x: 1460, y: 388, hp: 1.7, val: 240, reqTool: 'shovel', reqPpe: ['gloves'], haul: true },
-          { kind: 'hoard', art: 'bagsArt', label: 'Black Bags of Unanswered Questions', x: 1670, y: 285, hp: 1.9, val: 290, reqTool: 'shovel', reqPpe: ['gloves'], haul: true, requiresCheck: 'Blocked Fire Exit' },
+          { kind: 'hoard', label: 'Three Decades of Warranty Cards', x: 540, y: 357, hp: 1.2, val: 150, reqTool: 'rags' },
+          { kind: 'hoard', label: 'Pizza Box Penthouse', x: 1460, y: 388, hp: 1.7, val: 240, reqTool: 'shovel', haul: true },
+          { kind: 'hoard', art: 'bagsArt', label: 'Black Bags of Unanswered Questions', x: 1670, y: 285, hp: 1.9, val: 290, reqTool: 'shovel', haul: true, requiresCheck: 'Blocked Fire Exit' },
         ],
         oshas: [{ label: 'Blocked Fire Exit', fixMsg: 'Emergency route clear!', x: 1640, y: 177, hp: 0.8, val: 150 }],
         inspectors: [], clients: [],
       },
       {
         name: "Job 3: The Hoarder's Split-Level",
-        guide: 'Full PPE for red-zone messes. Match each mess to the tool icon, fix safety flags, haul bags and calm your clients.',
+        guide: 'Find gloves, a suit, and a respirator. Match each mess to the tool icon, fix safety flags, haul bags and calm your clients.',
         review: '“Found my 1996 Bowling Trophy AND my kitchen floor! 5 stars!” — Dave from Morristown',
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 500,  y: 160 },
@@ -820,7 +828,7 @@
       },
       {
         name: "Job 4: Grandma's 47-Cat Estate",
-        guide: 'Find Hank’s ClO₂ token in the garage and clear the scrubber flag for the odor objective. Watch out for the wiring flag and roaming trouble.',
+        guide: 'Find all three PPE pieces. Grab Hank’s ClO₂ token in the garage and clear the scrubber flag for the odor objective. Watch for wiring and roaming trouble.',
         review: '“ATP Swab read 0 RLU! Even the cats are impressed.” — Bio-One HQ',
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 1740, y: 150 },
@@ -1080,12 +1088,15 @@
         && clients.every((c) => c.calmed) && !player.carryingTrash;
     }
 
-    function ppeCount() { return (player.suit ? 1 : 0) + (player.mask ? 1 : 0) + (player.gloves ? 1 : 0); }
+    const JOB_PPE = [['gloves','gloves'],['suit','protective suit'],['mask','respirator']];
+    function ppeCount() { return JOB_PPE.filter(([kind])=>player[kind]).length; }
+    function missingPPE() { return JOB_PPE.filter(([kind])=>!player[kind]).map(([,label])=>label); }
+    function ppePickupHint() { return 'Find PPE: ' + missingPPE().join(', '); }
 
     function updateHud() {
       const pc = ppeCount();
       const ppeEl = document.getElementById('hud-ppe');
-      const ppeTotal = LEVELS[levelIdx].ppe.length;
+      const ppeTotal = JOB_PPE.length;
       ppeEl.className = 'stat-pill ' + (pc === ppeTotal ? 'ppe-ok' : 'ppe-warn');
       ppeEl.textContent = `🦺 PPE: ${pc}/${ppeTotal}${pc === ppeTotal ? ' Ready' : ''}`;
       const ownedIcons = Object.keys(player.tools || {}).map((k) => TOOL_META[k].icon).join('');
@@ -1229,7 +1240,7 @@
           sfx('pickup');
           spawnParticles(p.x, p.y, '#38bdf8', 18);
           addFloater(p.x, p.y - 20, `${p.isSpare ? 'RE-EQUIPPED' : 'EQUIPPED'} ${p.label.toUpperCase()}! +$${bonus}`, '#7dd3fc');
-          if (ppeCount() === 3) addFloater(player.x, player.y - 44, 'FULL PPE! OSHA PROOF! 💪', '#4ade80');
+          if (ppeCount() === JOB_PPE.length) addFloater(player.x, player.y - 44, 'FULL PPE EQUIPPED! 💪', '#4ade80');
         }
       }
 
@@ -1301,17 +1312,16 @@
           }
         }
         if (target) {
-          const requiredPpe = target.reqPpe || [];
-          if (!isOsha && requiredPpe.some((kind) => !player[kind])) {
-            if (toolWarnCooldown <= 0) {
-              toolWarnCooldown = 1.6;
-              addFloater(player.x, player.y - 36, '🦺 PICK UP THE BLUE GLOVES FIRST!', '#7dd3fc');
-            }
-          } else if (!isOsha && target.kind === 'bio' && ppeCount() < 3) {
-            if (fineCooldown <= 0) {
+          if (!isOsha && ppeCount() < JOB_PPE.length) {
+            // Every assignment uses the same gear. Higher-risk game hazards
+            // keep their existing fine; beginner messes just show a hint.
+            if (target.kind === 'bio' && fineCooldown <= 0) {
               fineCooldown = 2.0; fines += 1; score = Math.max(0, score - 200);
               sfx('whistle');
-              addFloater(player.x, player.y - 36, '🚨 NEED FULL PPE! -$200', '#fca5a5');
+            }
+            if (toolWarnCooldown <= 0) {
+              toolWarnCooldown = 1.6;
+              addFloater(player.x, player.y - 36, '🦺 ' + ppePickupHint(), '#7dd3fc');
             }
           } else if (!isOsha && target.requiresCheck && oshas.some((o) => o.label === target.requiresCheck && !o.done)) {
             if (toolWarnCooldown <= 0) {
@@ -1334,7 +1344,7 @@
           } else {
             player.scrubbing = true;
             player.activeTool = target.reqTool || null;
-            const rate = ppeCount() === 3 ? 1.15 : 0.85;
+            const rate = ppeCount() === JOB_PPE.length ? 1.15 : 0.85;
             target.progress += dt * rate;
             if (scrubSoundCooldown <= 0) {
               scrubSoundCooldown = 0.085;
@@ -1418,7 +1428,7 @@
             addFloater(g.x, g.y - 36, '😾 SIR SCRATCH-A-LOT! -$100', '#fde047');
           } else if (g.isAdjuster) {
             fineCooldown = 2.6;
-            if (ppeCount() < 3) {
+            if (ppeCount() < JOB_PPE.length) {
               score = Math.max(0, score - 175);
               g.speech = 'CLAIM DENIED!! NO PPE!'; g.speechTimer = 2.2;
               sfx('whistle');
@@ -1427,7 +1437,7 @@
               g.speech = 'Ugh… fine, claim approved.'; g.speechTimer = 2.0;
               addFloater(g.x, g.y - 36, '💼 Full PPE beat Adjuster Chad!', '#86efac');
             }
-          } else if (ppeCount() < 3) {
+          } else if (ppeCount() < JOB_PPE.length) {
             fineCooldown = 2.6; fines += 1; score = Math.max(0, score - 250);
             g.speech = 'SUS!! WHERE IS YOUR PPE?!'; g.speechTimer = 2.2;
             sfx('whistle');
@@ -2609,8 +2619,7 @@
         if (best && rank >= best.rank) continue;
         let blocker = '';
         if (type === 'hazard') {
-          if ((item.reqPpe || []).some((kind) => !player[kind])) blocker = 'Pick up the blue gloves';
-          else if (item.kind === 'bio' && ppeCount() < 3) blocker = 'Find all three PPE items';
+          if (ppeCount() < JOB_PPE.length) blocker = ppePickupHint();
           else if (item.requiresCheck && oshas.some((o) => !o.done && o.label === item.requiresCheck)) blocker = 'Clear the safety flag: ' + item.requiresCheck;
           else if (item.haul && player.carryingTrash) blocker = 'Drop your bag at the dumpster first';
         }
