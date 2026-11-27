@@ -630,9 +630,8 @@
       { type: 'chair', x: 548, y: 54, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 46, fpH: 51, solid: true },
       { type: 'tv', x: 82, y: 592, w: 146, h: 44, art: 'tvArt', size: 92, fpW: 54, fpH: 53, solid: true },
       { type: 'shelf', x: 472, y: 584, w: 94, h: 52, art: 'shelfArt', size: 62, fpW: 48, fpH: 65, solid: true },
-      // Kitchen — counter & sink flush against north wall, side prep counter against east wall
-      { type: 'counter', x: 740, y: 48, w: 290, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37, solid: true },
-      { type: 'island', x: 1170, y: 430, w: 104, h: 86, art: 'islandArt', size: 112, fpW: 60, fpH: 36, solid: true },
+      // Kitchen — single realistic counter & sink flush against north wall (no floating island sink!)
+      { type: 'counter', x: 740, y: 48, w: 320, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37, solid: true },
       // Garage — workbench flush against north wall, storage shelf flush against east wall
       { type: 'counter', x: 1340, y: 48, w: 260, h: 55, art: 'benchArt', size: 154, fpW: 90, fpH: 37, solid: true },
       { type: 'boxes', x: 1768, y: 420, w: 108, h: 110, art: 'shelfArt', size: 75, fpW: 52, fpH: 67, solid: true },
@@ -2580,11 +2579,103 @@
         }
       }
 
+      // 2b) True 3D Perspective Furniture & Appliances (flush on the floor & against walls!)
+      const cosA = Math.cos(player.angle), sinA = Math.sin(player.angle);
+      const eyeZ = FP_WALL_HEIGHT * 0.48;
+      function project3D(wx, wy, wz) {
+        const vx = wx - player.x, vy = wy - player.y;
+        const fwd = vx * cosA + vy * sinA;
+        if (fwd < 10) return null;
+        const side = -vx * sinA + vy * cosA;
+        return {
+          x: (VW / 2) + (side / fwd) * projPlane,
+          y: horizon + ((eyeZ - wz) * projPlane) / fwd,
+          fwd
+        };
+      }
+      function clipPolyNear(pts3d) {
+        const out = [];
+        for (let i = 0; i < pts3d.length; i++) {
+          const a = pts3d[i], b = pts3d[(i + 1) % pts3d.length];
+          const fa = (a[0] - player.x) * cosA + (a[1] - player.y) * sinA;
+          const fb = (b[0] - player.x) * cosA + (b[1] - player.y) * sinA;
+          if (fa >= 12) out.push(a);
+          if ((fa >= 12) !== (fb >= 12)) {
+            const t = (12 - fa) / (fb - fa);
+            out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+          }
+        }
+        return out;
+      }
+      function drawQuad3D(pts3d, fill, stroke) {
+        const clipped = clipPolyNear(pts3d);
+        if (clipped.length < 3) return;
+        const proj = clipped.map((p) => project3D(p[0], p[1], p[2])).filter(Boolean);
+        if (proj.length < 3) return;
+        const avgD = proj.reduce((s, p) => s + p.fwd, 0) / proj.length;
+        const minX = Math.min(...proj.map((p) => p.x)), maxX = Math.max(...proj.map((p) => p.x));
+        if (maxX < 0 || minX > VW) return;
+        const startC = Math.max(0, Math.floor(minX / stripW));
+        const endC = Math.min(numRays - 1, Math.ceil(maxX / stripW));
+        const runs = [];
+        let r0 = -1;
+        for (let c = startC; c <= endC + 1; c++) {
+          const vis = c <= endC && avgD < zBuf[c] + 18;
+          if (vis && r0 < 0) r0 = c;
+          if (!vis && r0 >= 0) { runs.push([r0 * stripW, (c - r0) * stripW]); r0 = -1; }
+        }
+        if (!runs.length) return;
+        ctx.save();
+        ctx.beginPath();
+        for (const [rx, rw] of runs) ctx.rect(rx, 0, rw, VH);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.moveTo(proj[0].x, proj[0].y);
+        for (let i = 1; i < proj.length; i++) ctx.lineTo(proj[i].x, proj[i].y);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.fill();
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
+        ctx.restore();
+      }
+
+      const PROP_STYLES = {
+        counter: { zH: 34, top: '#cbd5e1', front: '#9a6b3e', side: '#7c532e', edge: '#3f2816' },
+        couch:   { zH: 28, top: '#64748b', front: '#475569', side: '#334155', edge: '#0f172a' },
+        chair:   { zH: 30, top: '#78716c', front: '#57534e', side: '#44403c', edge: '#1c1917' },
+        tv:      { zH: 36, top: '#334155', front: '#1e293b', side: '#0f172a', edge: '#020617' },
+        shelf:   { zH: 60, top: '#78502e', front: '#634022', side: '#4d3018', edge: '#29180a' },
+        bed:     { zH: 24, top: '#3730a3', front: '#5c3a21', side: '#452a16', edge: '#1e1b4b' },
+        tub:     { zH: 24, top: '#7dd3fc', front: '#e2e8f0', side: '#cbd5e1', edge: '#64748b' },
+        boxes:   { zH: 32, top: '#ca8a04', front: '#a16207', side: '#854d0e', edge: '#422006' },
+      };
+
+      const fpBoxes = HOUSE_PROPS
+        .filter((p) => p.solid)
+        .map((p) => {
+          const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+          return { p, d: Math.hypot(cx - player.x, cy - player.y) };
+        })
+        .filter((b) => b.d < 1150)
+        .sort((a, b) => b.d - a.d);
+
+      for (const { p } of fpBoxes) {
+        const st = PROP_STYLES[p.type] || PROP_STYLES.boxes;
+        const x0 = p.x, x1 = p.x + p.w, y0 = p.y, y1 = p.y + p.h, zH = st.zH;
+        const faces = [
+          { pts: [[x0, y0, 0], [x1, y0, 0], [x1, y0, zH], [x0, y0, zH]], col: st.front, vis: player.y < y0 },
+          { pts: [[x1, y1, 0], [x0, y1, 0], [x0, y1, zH], [x1, y1, zH]], col: st.front, vis: player.y > y1 },
+          { pts: [[x0, y1, 0], [x0, y0, 0], [x0, y0, zH], [x0, y1, zH]], col: st.side,  vis: player.x < x0 },
+          { pts: [[x1, y0, 0], [x1, y1, 0], [x1, y1, zH], [x1, y0, zH]], col: st.side,  vis: player.x > x1 },
+        ];
+        for (const f of faces) if (f.vis) drawQuad3D(f.pts, f.col, st.edge);
+        if (zH < eyeZ) {
+          drawQuad3D([[x0, y0, zH], [x1, y0, zH], [x1, y1, zH], [x0, y1, zH]], st.top, st.edge);
+        }
+      }
+
       // 3) Collect All 3D Billboards (Characters, Clients, Bad Guys, Hazards, OSHA, PPE, Tools, Dumpster!)
       const sprites = [];
-      for (const p of HOUSE_PROPS) {
-        if (p.art && spriteReady(p.art)) sprites.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, type: 'prop', item: p });
-      }
       for (const p of ppeItems) if (!p.taken) sprites.push({ x: p.x, y: p.y, type: 'ppe', item: p });
       for (const t of toolItems) if (!t.taken) sprites.push({ x: t.x, y: t.y, type: 'tool', item: t });
       sprites.push({ x: DUMPSTER.x, y: DUMPSTER.y, type: 'dumpster', item: DUMPSTER });
@@ -2593,7 +2684,6 @@
       for (const c of clients) sprites.push({ x: c.x, y: c.y, type: 'client', item: c });
       for (const g of inspectors) sprites.push({ x: g.x, y: g.y, type: 'enemy', item: g });
 
-      const cosA = Math.cos(player.angle), sinA = Math.sin(player.angle);
       const visibleSprites = [];
       for (const s of sprites) {
         const vx = s.x - player.x, vy = s.y - player.y;
