@@ -317,7 +317,7 @@
   <div class="hud">
     <div class="hud-brand">
       <div class="bio-badge" style="overflow:hidden;padding:0;background:#0f1f3a;">
-        <img src="assets/hank.png" alt="Hank" style="width:100%;height:100%;object-fit:cover;object-position:top;" onerror="this.style.display='none'" />
+        <canvas id="hank-live-portrait" width="64" height="64" aria-label="Hank's current gear" role="img" style="display:block;width:100%;height:100%;object-fit:cover"></canvas>
       </div>
       <div>
         <div class="hud-title">BIO-ONE HIGHLANDS · HAZMAT HERO</div>
@@ -357,7 +357,7 @@
     </div>
 
     <div class="overlay" id="start-overlay">
-      <img src="assets/hank.png" alt="Hank" style="width:116px;height:116px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6));" onerror="this.style.display='none'" />
+      <img src="assets/hank-workwear.webp" alt="Hank" style="width:116px;height:116px;object-fit:contain;filter:drop-shadow(0 12px 24px rgba(0,0,0,0.6));" onerror="this.style.display='none'" />
       <h1>HAZMAT HERO</h1>
       <p>
         Four dispatches, from a simple living-room spill to the 47-Cat Estate. Start with gloves and rags, then unlock tougher messes, new gear, safety checks and some wildly unhelpful wildlife.
@@ -441,6 +441,7 @@
     // ================= PIXAR-STYLE 3D SPRITE SHEET & REALISTIC WALL TEXTURES =================
     const SPRITE_URLS = {
       hank: 'assets/hank.png',
+      hankWorkwear: 'assets/hank-workwear.webp',
       inspector: 'assets/inspector.png',
       raccoon: 'assets/raccoon.png',
       dave: 'assets/dave.png',
@@ -474,7 +475,7 @@
       bedArt: 'assets/fixture-bed.webp',
       counterArt: 'assets/fixture-counter.webp',
     };
-    const SPRITE_VERSION = 'aim-and-fixtures-4';
+    const SPRITE_VERSION = 'grounded-rooms-gear-1';
     const SPRITES = {};
     for (const [k, url] of Object.entries(SPRITE_URLS)) {
       const img = new Image();
@@ -623,27 +624,26 @@
       { id: 'basement', name: 'The Mystery Basement',      x: 1306, y: 666, w: 574, h: 574, floor: '#2e333c', alt: '#373d47', style: 'concrete' },
     ];
 
+    // A single floor footprint drives collision, top-down placement and 3D models.
+    // Heights are in the same units as the wall and camera, never screen pixels.
     const HOUSE_PROPS = [
-      // Living room — furniture placed flush against walls, clear of doorways
-      { type: 'rug', x: 170, y: 205, w: 260, h: 170, color: '#6b2c2c' },
-      { type: 'couch', x: 205, y: 48, w: 190, h: 54, art: 'sofaArt', size: 154, fpW: 82, fpH: 48, solid: true },
-      { type: 'chair', x: 548, y: 54, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 46, fpH: 51, solid: true },
-      { type: 'tv', x: 82, y: 592, w: 146, h: 44, art: 'tvArt', size: 92, fpW: 54, fpH: 53, solid: true },
-      { type: 'shelf', x: 472, y: 584, w: 94, h: 52, art: 'shelfArt', size: 62, fpW: 48, fpH: 65, solid: true },
-      // Kitchen — single realistic counter & sink flush against north wall (no floating island sink!)
-      { type: 'counter', x: 740, y: 48, w: 320, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37, solid: true },
-      // Garage — workbench flush against north wall, storage shelf flush against east wall
-      { type: 'counter', x: 1340, y: 48, w: 260, h: 55, art: 'benchArt', size: 154, fpW: 90, fpH: 37, solid: true },
-      { type: 'boxes', x: 1768, y: 420, w: 108, h: 110, art: 'shelfArt', size: 75, fpW: 52, fpH: 67, solid: true },
-      // Bedroom — bed tucked flush in south-west corner with rug beside it
-      { type: 'rug', x: 245, y: 845, w: 240, h: 175, color: '#2b3e63' },
-      { type: 'bed', x: 44, y: 1078, w: 190, h: 155, art: 'bedArt', size: 134, fpW: 69, fpH: 40, solid: true },
-      // Bathroom — tub flush in north-east corner, sink vanity flush against south wall
-      { type: 'tub', x: 1110, y: 670, w: 165, h: 85, art: 'cleanTubArt', size: 111, fpW: 67, fpH: 31, solid: true },
-      { type: 'counter', x: 740, y: 1182, w: 210, h: 54, art: 'vanityArt', size: 113, fpW: 58, fpH: 38, solid: true },
-      // Basement — clutter & bags stacked flush in corners
-      { type: 'boxes', x: 1312, y: 670, w: 120, h: 96, art: 'clutterArt', size: 81, fpW: 55, fpH: 37, solid: true },
-      { type: 'boxes', x: 1744, y: 1126, w: 130, h: 108, art: 'bagsArt', size: 88, fpW: 59, fpH: 40, solid: true },
+      { type: 'rug', x: 260, y: 178, w: 152, h: 99, color: '#6b2c2c' },
+      { type: 'couch', x: 283, y: 124, w: 106, h: 45, art: 'sofaArt', solid: true },
+      { type: 'chair', x: 555, y: 89, w: 47, h: 41, art: 'chairArt', solid: true },
+      { type: 'tv', x: 119, y: 589, w: 77, h: 29, art: 'tvArt', flip: true, solid: true },
+      { type: 'shelf', x: 548, y: 598, w: 67, h: 24, art: 'shelfArt', flip: true, solid: true },
+      { type: 'counter', x: 718, y: 77, w: 200, h: 31, art: 'counterArt', solid: true },
+      { type: 'range', x: 938, y: 77, w: 34, h: 31, solid: true },
+      { type: 'fridge', x: 996, y: 80, w: 42, h: 36, solid: true },
+      { type: 'bench', x: 1360, y: 77, w: 130, h: 34, art: 'benchArt', solid: true },
+      { type: 'shelf', x: 1794, y: 428, w: 60, h: 30, art: 'shelfArt', solid: true },
+      { type: 'rug', x: 245, y: 845, w: 190, h: 140, color: '#2b3e63' },
+      { type: 'bed', x: 64, y: 682, w: 108, h: 126, art: 'bedArt', solid: true },
+      { type: 'tub', x: 1111, y: 718, w: 107, h: 46, art: 'cleanTubArt', solid: true },
+      { type: 'toilet', x: 1219, y: 799, w: 27, h: 38, solid: true },
+      { type: 'vanity', x: 739, y: 720, w: 103, h: 37, art: 'vanityArt', solid: true },
+      { type: 'boxes', x: 1328, y: 714, w: 66, h: 51, art: 'clutterArt', solid: true },
+      { type: 'bags', x: 1775, y: 1141, w: 67, h: 56, art: 'bagsArt', solid: true },
     ];
 
     const BUMP_QUIPS = {
@@ -704,7 +704,7 @@
         ppe: [
           { kind: 'suit',   label: 'Tyvek Suit',      x: 500,  y: 160 },
           { kind: 'mask',   label: 'P100 Respirator', x: 1140, y: 200 },
-          { kind: 'gloves', label: 'Nitrile Gloves',  x: 180,  y: 800 },
+          { kind: 'gloves', label: 'Nitrile Gloves',  x: 225,  y: 800 },
         ],
         tools: [
           { kind: 'shovel',   x: 150,  y: 340 },
@@ -830,7 +830,7 @@
         tools: [
           { kind: 'shovel',   x: 480,  y: 260 },
           { kind: 'sprayer',  x: 820,  y: 480 },
-          { kind: 'rags',     x: 180,  y: 780 },
+          { kind: 'rags',     x: 222,  y: 780 },
           { kind: 'scrubber', x: 1450, y: 460 },
           { kind: 'barrier',  x: 840,  y: 1080 },
           { kind: 'clo2',     x: 1420, y: 222 },
@@ -961,8 +961,8 @@
       walls = buildHouseWalls();
       colliders = walls.concat(SOLID_PROPS);
       player = {
-        x: 160, y: 160, r: 21,
-        facing: 1, angle: 0.48,
+        x: 245, y: 290, r: 19,
+        facing: 1, angle: -0.99,
         suit: false, mask: false, gloves: false,
         tools: {}, carryingTrash: false,
         stepPhase: 0, moving: false, scrubbing: false, activeTool: null
@@ -1391,7 +1391,7 @@
                 { x: 500, y: 170 }, { x: 150, y: 490 },
                 { x: 780, y: 210 }, { x: 1150, y: 500 },
                 { x: 1480, y: 210 }, { x: 1740, y: 490 },
-                { x: 480, y: 800 }, { x: 170, y: 820 },
+                { x: 480, y: 800 }, { x: 218, y: 833 },
                 { x: 820, y: 820 }, { x: 1130, y: 1090 },
                 { x: 1460, y: 920 }, { x: 1720, y: 830 }
               ];
@@ -1446,6 +1446,98 @@
     }
 
     // ================= LIFELIKE 1980s ILLUSTRATED CHARACTER RENDERER =================
+    // All wearable pieces share the workwear sprite's normalized body anchors.
+    // Render from live game state, so pickups, theft and level resets agree.
+    let coverallTexture;
+    function getCoverallTexture() {
+      if (coverallTexture) return coverallTexture;
+      const source=spriteReady('hank');
+      if (!source) return null;
+      const tex=document.createElement('canvas');
+      tex.width=source.naturalWidth;tex.height=source.naturalHeight;
+      const c=tex.getContext('2d');
+      c.drawImage(source,0,0);
+      c.globalCompositeOperation='destination-in';
+      const fade=c.createLinearGradient(0,0,0,tex.height);
+      fade.addColorStop(0,'transparent');fade.addColorStop(.435,'transparent');
+      fade.addColorStop(.51,'white');fade.addColorStop(.865,'white');fade.addColorStop(.912,'transparent');
+      c.fillStyle=fade;c.fillRect(0,0,tex.width,tex.height);
+      coverallTexture=tex;return tex;
+    }
+
+    function drawHankLayers(target, x, y, w, h, gear) {
+      const body = spriteReady('hankWorkwear');
+      if (!body) return false;
+      target.save();
+      target.translate(x,y); target.scale(w,h);
+      target.drawImage(body,0,0,1,1);
+      const path=(points)=>{
+        target.beginPath();target.moveTo(...points[0]);
+        for(const p of points.slice(1))target.lineTo(...p);
+        target.closePath();
+      };
+      const oval=(x,y,w,h,fill)=>{
+        target.beginPath();target.ellipse(x,y,w,h,0,0,Math.PI*2);
+        target.fillStyle=fill;target.fill();
+      };
+      const shades=(x0,y0,x1,y1,stops)=>{
+        const g=target.createLinearGradient(x0,y0,x1,y1);
+        stops.forEach(([t,c])=>g.addColorStop(t,c));return g;
+      };
+      if (gear.suit) {
+        const white = shades(.11,.33,.87,.88,[[0,'#edf1f2'],[.29,'#c1cbd3'],[.49,'#fff'],[1,'#8a9ba7']]);
+        path([[.32,.30],[.38,.33],[.62,.33],[.68,.30],[.80,.34],[.87,.41],[.97,.59],
+          [.84,.62],[.77,.49],[.76,.60],[.80,.86],[.66,.90],[.52,.70],[.47,.70],[.35,.90],[.20,.87],[.24,.60],
+          [.24,.49],[.16,.62],[.031,.59],[.13,.41],[.20,.34]]);
+        target.fillStyle=white;target.fill();
+        const stock=getCoverallTexture();
+        if (stock) {
+          // Partial reuse of the coverall's real fabric texture, excluding the
+          // respirator and gloves baked into the old, fully dressed sprite.
+          target.save();target.clip();
+          target.drawImage(stock,0,0,1,1);
+          target.restore();
+        }
+        target.strokeStyle='#5a7284';target.lineWidth=.008;
+        target.beginPath();target.moveTo(.50,.338);target.lineTo(.50,.67);target.stroke();
+        oval(.643,.385,.036,.017,'#f97316');
+        oval(.643,.385,.013,.006,'#552a15');
+      }
+      if (gear.gloves) {
+        for(const flip of [false,true]) {
+          target.save();if(flip){target.translate(1,0);target.scale(-1,1);}
+          const blue=shades(.012,.62,.18,.71,[[0,'#25486f'],[.42,'#58c6f3'],[1,'#146391']]);
+          path([[.022,.59],[.125,.60],[.143,.628],[.169,.642],[.164,.671],[.135,.66],[.131,.691],
+            [.113,.711],[.093,.708],[.067,.693],[.039,.676],[.024,.649],[.015,.617]]);
+          target.fillStyle=blue;target.fill();
+          target.strokeStyle='#277eb0';target.lineWidth=.009;target.stroke();target.restore();
+        }
+      }
+      if (gear.mask) {
+        target.strokeStyle='#453a31';target.lineWidth=.022;
+        target.beginPath();target.moveTo(.21,.205);target.lineTo(.365,.245);target.moveTo(.79,.205);target.lineTo(.635,.245);target.stroke();
+        path([[.39,.204],[.50,.196],[.61,.204],[.665,.245],[.617,.28],[.50,.294],[.383,.28],[.335,.245]]);
+        target.fillStyle=shades(.31,.203,.66,.289,[[0,'#90a5b5'],[.40,'#536979'],[1,'#202c39']]);target.fill();
+        oval(.50,.254,.068,.029,'#202d3b');
+        for(const t of [.346,.654]) {
+          oval(t,.25,.067,.028,'#202932');oval(t,.247,.054,.023,'#fbbf24');oval(t,.247,.037,.014,'#393846');
+        }
+        oval(.5,.249,.032,.010,'#728899');
+      }
+      target.restore(); return true;
+    }
+
+    let lastHankPortraitState = '';
+    function syncHankPortrait() {
+      const el=document.getElementById('hank-live-portrait');
+      const ready=Boolean(spriteReady('hankWorkwear'));
+      const state=[ready,player.suit,player.gloves,player.mask].join();
+      if(!ready || state===lastHankPortraitState) return;
+      const portrait=el.getContext('2d');portrait.clearRect(0,0,64,64);
+      drawHankLayers(portrait,-3,-14,70,137,player);
+      lastHankPortraitState=state;
+    }
+
     function drawBean(x, y, opts) {
       const { bodyColor, shadeColor, facing = 1, stepPhase = 0, moving = false,
               hasSuit = false, hasMask = false, hasGloves = false,
@@ -1466,7 +1558,14 @@
 
       const bob = moving ? Math.abs(Math.sin(stepPhase)) * -3.5 : Math.sin(elapsed * 3.2) * 0.9;
       // High-res Pixar-style 3D sprite rendering when available!
-      const sKey = isHank ? 'hank' : (isClient ? getClientSpriteKey(charName) : (isInspector ? (charName.includes('Chad') ? 'chad' : 'inspector') : null));
+      if (isHank && spriteReady('hankWorkwear')) {
+        ctx.translate(0,bob);ctx.scale(facing,1);
+        ctx.rotate(moving ? Math.sin(stepPhase)*.045 : 0);
+        const h=74, w=38;
+        drawHankLayers(ctx,-w/2,25-h,w,h,{suit:hasSuit,mask:hasMask,gloves:hasGloves});
+        ctx.restore();return;
+      }
+      const sKey = isHank ? null : (isClient ? getClientSpriteKey(charName) : (isInspector ? (charName.includes('Chad') ? 'chad' : 'inspector') : null));
       const sImg = sKey ? spriteReady(sKey) : null;
       if (sImg) {
         ctx.translate(0, bob);
@@ -1973,7 +2072,7 @@
       ctx.save();
       ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
-      ctx.ellipse(x, foot - 3, w * 0.39, Math.max(2, h * 0.06), 0, 0, Math.PI * 2);
+      ctx.ellipse(x, foot - Math.max(3, h * .08), w * 0.39, Math.max(2, h * 0.065), 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.drawImage(art, x - w / 2, foot - h, w, h);
       ctx.restore();
@@ -2010,6 +2109,33 @@
         ctx.restore();
       }
       return height;
+    }
+
+    function drawFloorFixture(p) {
+      const { x, y, w, h, type } = p;
+      const shell = ctx.createLinearGradient(x, y, x + w, y + h);
+      shell.addColorStop(0, '#f1f5f9');
+      shell.addColorStop(1, '#94a3b8');
+      ctx.fillStyle = 'rgba(0,0,0,.32)';
+      roundRect(x + 2, y + 3, w, h, 5); ctx.fill();
+      ctx.fillStyle = shell; ctx.strokeStyle = '#283341'; ctx.lineWidth = 1.6;
+      if (type === 'toilet') {
+        roundRect(x, y, w, h * .34, 4); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * .65, w * .42, h * .34, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#64748b';
+        ctx.beginPath(); ctx.ellipse(x + w / 2, y + h * .65, w * .24, h * .20, 0, 0, Math.PI * 2); ctx.fill();
+      } else {
+        roundRect(x, y, w, h, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#334155';
+        if (type === 'range') {
+          for (const u of [.27, .73]) for (const v of [.27, .70]) {
+            ctx.beginPath(); ctx.arc(x + w * u, y + h * v, w * .125, 0, Math.PI * 2); ctx.fill();
+          }
+        } else {
+          ctx.fillRect(x + 2, y + h * .69, w - 4, 1.4);
+          ctx.fillRect(x + w * .69, y + h * .58, w * .15, 3);
+        }
+      }
     }
 
     function roundRect(x, y, w, h, r) {
@@ -2077,16 +2203,15 @@
         ctx.save();
         const art = p.art && spriteReady(p.art);
         if (art) {
-          let x = p.x + p.w / 2, y = p.y + p.h;
-          const [dw, dh] = artDimensions(art, p.size, 106);
-          const room = HOUSE_ROOMS.find((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
-          if (room) {
-            // Keep furniture cleanly tucked inside the room walls — never sliced by north/side walls!
-            x = Math.max(room.x + dw / 2 + 4, Math.min(room.x + room.w - dw / 2 - 4, x));
-            y = Math.max(room.y + dh + 4, Math.min(room.y + room.h - 4, y));
-            ctx.beginPath(); ctx.rect(room.x, room.y, room.w, room.h); ctx.clip();
-          }
-          drawPropArt(art, x, y, p.size, 106);
+          // Anchor the art to the front of its floor footprint. Never move the image
+          // independently to dodge a wall; its visible base and collider stay aligned.
+          const room = HOUSE_ROOMS.find(r => p.x >= r.x && p.y >= r.y && p.x + p.w <= r.x + r.w && p.y + p.h <= r.y + r.h);
+          const foot = p.y + p.h;
+          const maxArtHeight = p.type === 'bed' ? 119 : p.type === 'vanity' ? 101 : 86;
+          const maxH = Math.min(maxArtHeight, foot - (room?.y ?? 46) - 8);
+          drawPropArt(art, p.x + p.w / 2, foot, p.w, maxH);
+        } else if (['range', 'fridge', 'toilet'].includes(p.type)) {
+          drawFloorFixture(p);
         } else if (p.type === 'rug') {
           ctx.fillStyle = p.color;
           roundRect(p.x, p.y, p.w, p.h, 12); ctx.fill();
@@ -2533,8 +2658,99 @@
       return { dist: bestT, side: hitSide, u: hitU };
     }
 
+    // Solid objects begin at z=0. Each model uses the same measured footprint
+    // as collision; these parts only shape the visible furniture.
+    function fixtureParts(p) {
+      const parts = [];
+      const add = (u0, v0, u1, v1, lo, hi, top, front, side = front) => {
+        if (p.flip) [v0,v1] = [1-v1,1-v0];
+        parts.push({ owner:p, x0:p.x+p.w*u0, x1:p.x+p.w*u1, y0:p.y+p.h*v0, y1:p.y+p.h*v1, lo, hi, top, front, side });
+      };
+      const wood = ['#a77551','#7c4e32','#5e3b2c'], steel = ['#e2e8f0','#aab8c5','#788794'];
+      const sofa = p.type === 'couch' ? ['#ae9279','#82654d','#674e3d'] : ['#bc7753','#9b5539','#7c3b2a'];
+      const ceramic = ['#f8fafc','#cbd5e1','#9ca9b8'];
+      switch(p.type) {
+        case 'couch': case 'chair': {
+          for (const u of [.06,.89]) for (const v of [.08,.83]) add(u,v,u+.05,v+.08,0,4,...wood);
+          add(0,0,1,1,4,12,...sofa);
+          add(.018,.02,.982,.30,12,34,...sofa);
+          add(0,.28,.115,.97,12,25,...sofa);
+          add(.885,.28,1,.97,12,25,...sofa);
+          const seats = p.type==='couch' ? 3 : 1;
+          for(let i=0;i<seats;i++) {
+            const L=.12+i*.76/seats, R=.12+(i+1)*.76/seats-.014;
+            add(L,.31,R,.96,12,17,sofa[0],sofa[1],sofa[2]);
+          }
+          break;
+        }
+        case 'tv':
+          add(.03,0,.97,1,0,18,...wood);
+          add(.17,.18,.83,.79,18,20,'#44515e','#232f3c','#202933');
+          add(.12,.30,.88,.68,20,42,'#48515a','#202c38','#111a21');
+          add(.17,.684,.83,.696,23,39,'#324958','#365f75','#294250');
+          add(.23,.697,.50,.703,35,37,'#628594','#5c8391','#365363');
+          break;
+        case 'shelf':
+          for(const u of [.03,.91]) for(const v of [.02,.90]) add(u,v,u+.06,v+.07,0,56,...wood);
+          for(const z of [4,20,37,53]) add(0,0,1,1,z,z+3,...wood);
+          add(.13,.22,.36,.75,7,17,'#c3a373','#96744b','#755339');
+          add(.51,.16,.78,.70,23,34,'#77949d','#53707b','#405961');
+          add(.20,.30,.43,.72,40,50,'#9b5343','#733c34','#59322d');
+          break;
+        case 'counter': case 'vanity': case 'bench': {
+          add(.02,.03,.98,.98,0,33,...wood);
+          add(0,0,1,1,33,36,...steel);
+          for(const u of [.19,.46,.73]) add(u,.979,u+.13,.995,24,26,'#d8d0be','#d8d0be','#a2a39e');
+          if(p.type!=='bench') {
+            add(.37,.22,.63,.73,36,36.4,'#536d7d','#718995','#536d7d');
+            add(.47,.17,.51,.28,36.4,41,...steel);
+          }
+          break;
+        }
+        case 'range':
+          add(0,0,1,1,0,36,...steel);
+          add(.11,.988,.89,1,6,23,'#182c39','#263d49','#182c39');
+          add(.14,.988,.86,1,27,29,'#f2f7fa','#d9e0e5','#aab8c5');
+          for(const u of [.15,.57]) for(const v of [.15,.57]) add(u,v,u+.26,v+.26,36,37,'#28333d','#334552','#17222c');
+          break;
+        case 'fridge':
+          add(0,0,1,1,0,65,...steel);
+          add(.025,.996,.975,1,4,46,'#c2ccd4','#cad4df','#a7b6bf');
+          add(.025,.996,.975,1,47,63,'#c2ccd4','#cad4df','#a7b6bf');
+          for(const z of [37,53]) add(.72,.99,.80,1,z,z+7,'#5b7081','#5b7081','#47566a');
+          break;
+        case 'bed':
+          add(0,.01,1,1,0,12,...wood);
+          add(0,0,1,.08,12,36,...wood);
+          add(.026,.07,.974,.97,12,20,'#e5e7eb','#b9c5df','#8995ad');
+          add(.03,.36,.97,.97,20,22,'#746db3','#4c4687','#393369');
+          for(const u of [.10,.54]) add(u,.12,u+.33,.34,20,24,'#f3eef9','#d5cce2','#b7adc9');
+          break;
+        case 'tub':
+          add(.04,.06,.96,.94,0,10,...ceramic);
+          add(.065,.13,.935,.87,10,13,'#79b5c4','#4b818d','#496c77');
+          for(const [u,v,w,h] of [[0,0,1,.13],[0,.87,1,1],[0,.13,.065,.87],[.935,.13,1,.87]]) add(u,v,w,h,0,21,...ceramic);
+          add(.83,.02,.87,.12,21,28,...steel);
+          break;
+        case 'toilet':
+          add(.20,.22,.80,.80,0,11,...ceramic);
+          add(.10,.03,.90,.36,10,26,...ceramic);
+          add(.05,.35,.95,.95,11,18,...ceramic);
+          add(.31,.51,.69,.79,18,18.15,'#7c9ca9','#7c9ca9','#7c9ca9');
+          break;
+        default:
+          add(.06,.11,.56,.95,0,22,'#bd966a','#85613f','#6e4d34');
+          add(.53,.17,.98,.82,0,16,'#9f7954','#76543b','#5a3e29');
+          add(.21,.25,.67,.64,22,31,'#d0aa7c','#a1784f','#7c5638');
+          if (p.type==='bags') for(const part of parts) Object.assign(part,{top:'#4e5865',front:'#343942',side:'#262b32'});
+      }
+      return parts;
+    }
+    const FIXTURE_MODELS = SOLID_PROPS.flatMap(fixtureParts);
+
     function drawFirstPerson() {
-      const fov = Math.PI / 2.75; // ~65 deg crisp arcade FOV
+      const fov = VW / VH < 1 ? Math.PI / 2.15 : Math.PI / 2.60;
+      const eyeZ = FP_WALL_HEIGHT * 0.59;
       const halfH = VH * 0.5;
       const bobY = player.moving ? Math.sin(player.stepPhase * 1.1) * 5.5 : Math.sin(elapsed * 2.5) * 1.2;
       const horizon = halfH + bobY;
@@ -2569,7 +2785,7 @@
         zBuf[i] = perpDist;
 
         const wallH = (FP_WALL_HEIGHT * projPlane) / perpDist;
-        const top = horizon - wallH * 0.52;
+        const top = horizon - (FP_WALL_HEIGHT - eyeZ) * projPlane / perpDist;
         const x = i * stripW;
         const texX = ((Math.floor(hit.u * 1.4) % 256) + 256) % 256;
 
@@ -2585,7 +2801,6 @@
 
       // 2b) True 3D Perspective Furniture & Appliances (flush on the floor & against walls!)
       const cosA = Math.cos(player.angle), sinA = Math.sin(player.angle);
-      const eyeZ = FP_WALL_HEIGHT * 0.48;
       function project3D(wx, wy, wz) {
         const vx = wx - player.x, vy = wy - player.y;
         const fwd = vx * cosA + vy * sinA;
@@ -2611,75 +2826,83 @@
         }
         return out;
       }
-      function drawQuad3D(pts3d, fill, stroke) {
-        const clipped = clipPolyNear(pts3d);
-        if (clipped.length < 3) return;
-        const proj = clipped.map((p) => project3D(p[0], p[1], p[2])).filter(Boolean);
-        if (proj.length < 3) return;
-        const avgD = proj.reduce((s, p) => s + p.fwd, 0) / proj.length;
-        const minX = Math.min(...proj.map((p) => p.x)), maxX = Math.max(...proj.map((p) => p.x));
-        if (maxX < 0 || minX > VW) return;
-        const startC = Math.max(0, Math.floor(minX / stripW));
-        const endC = Math.min(numRays - 1, Math.ceil(maxX / stripW));
-        const runs = [];
-        let r0 = -1;
-        for (let c = startC; c <= endC + 1; c++) {
-          const vis = c <= endC && avgD < zBuf[c] + 18;
-          if (vis && r0 < 0) r0 = c;
-          if (!vis && r0 >= 0) { runs.push([r0 * stripW, (c - r0) * stripW]); r0 = -1; }
+      // Record each visible face's vertical span per ray. Foreground furniture
+      // occludes the part of a character behind it, without hiding their head.
+      const propDepth = Array.from({length:numRays}, () => []);
+      function quadDepthAtX(proj, x) {
+        const cuts = [];
+        for (let i=0; i<proj.length; i++) {
+          const a=proj[i], b=proj[(i+1)%proj.length];
+          if ((a.x <= x && b.x > x) || (b.x <= x && a.x > x)) {
+            const t=(x-a.x)/(b.x-a.x);
+            cuts.push({y:a.y+(b.y-a.y)*t, d:1/((1-t)/a.fwd+t/b.fwd)});
+          }
         }
-        if (!runs.length) return;
+        if (cuts.length < 2) return null;
+        cuts.sort((a,b)=>a.y-b.y);
+        return {lo:cuts[0].y, hi:cuts.at(-1).y, d:(cuts[0].d+cuts.at(-1).d)/2};
+      }
+      function drawQuad3D(pts3d, fill) {
+        const proj = clipPolyNear(pts3d).map(p=>project3D(...p)).filter(Boolean);
+        if (proj.length < 3) return;
+        const minX = Math.min(...proj.map(p=>p.x)), maxX = Math.max(...proj.map(p=>p.x));
+        if (maxX < 0 || minX > VW) return;
+        const start = Math.max(0, Math.floor(minX/stripW)), end = Math.min(numRays-1, Math.ceil(maxX/stripW));
+        const runs = []; let first = -1;
+        for (let c=start;c<=end+1;c++) {
+          const mid = c*stripW+stripW/2;
+          const span = c<=end && quadDepthAtX(proj,Math.max(minX+.001,Math.min(maxX-.001,mid)));
+          const visible = span && span.d < zBuf[c]+.8;
+          if (visible) {
+            if(first<0) first=c;
+            if(span.hi>0 && span.lo<VH) propDepth[c].push(span);
+          } else if(first>=0) { runs.push([first*stripW,(c-first)*stripW]); first=-1; }
+        }
+        if(!runs.length) return;
         ctx.save();
         ctx.beginPath();
-        for (const [rx, rw] of runs) ctx.rect(rx, 0, rw, VH);
+        for(const [x,w] of runs) ctx.rect(x,0,w,VH);
         ctx.clip();
-        ctx.beginPath();
-        ctx.moveTo(proj[0].x, proj[0].y);
-        for (let i = 1; i < proj.length; i++) ctx.lineTo(proj[i].x, proj[i].y);
-        ctx.closePath();
-        ctx.fillStyle = fill;
-        ctx.fill();
-        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.5; ctx.stroke(); }
-        ctx.restore();
+        ctx.beginPath(); ctx.moveTo(proj[0].x,proj[0].y);
+        for(let i=1;i<proj.length;i++) ctx.lineTo(proj[i].x,proj[i].y);
+        ctx.closePath(); ctx.fillStyle=fill; ctx.fill(); ctx.restore();
       }
 
-      const PROP_STYLES = {
-        counter: { zH: 34, top: '#cbd5e1', front: '#9a6b3e', side: '#7c532e', edge: '#3f2816' },
-        couch:   { zH: 28, top: '#64748b', front: '#475569', side: '#334155', edge: '#0f172a' },
-        chair:   { zH: 30, top: '#78716c', front: '#57534e', side: '#44403c', edge: '#1c1917' },
-        tv:      { zH: 36, top: '#334155', front: '#1e293b', side: '#0f172a', edge: '#020617' },
-        shelf:   { zH: 60, top: '#78502e', front: '#634022', side: '#4d3018', edge: '#29180a' },
-        bed:     { zH: 24, top: '#3730a3', front: '#5c3a21', side: '#452a16', edge: '#1e1b4b' },
-        tub:     { zH: 24, top: '#7dd3fc', front: '#e2e8f0', side: '#cbd5e1', edge: '#64748b' },
-        boxes:   { zH: 32, top: '#ca8a04', front: '#a16207', side: '#854d0e', edge: '#422006' },
-      };
-
-      const fpBoxes = HOUSE_PROPS
-        .filter((p) => p.solid)
-        .map((p) => {
-          const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
-          return { p, d: Math.hypot(cx - player.x, cy - player.y) };
-        })
-        .filter((b) => b.d < 1150)
-        .sort((a, b) => b.d - a.d);
-
-      for (const { p } of fpBoxes) {
-        const st = PROP_STYLES[p.type] || PROP_STYLES.boxes;
-        const x0 = p.x, x1 = p.x + p.w, y0 = p.y, y1 = p.y + p.h, zH = st.zH;
-        const faces = [
-          { pts: [[x0, y0, 0], [x1, y0, 0], [x1, y0, zH], [x0, y0, zH]], col: st.front, vis: player.y < y0 },
-          { pts: [[x1, y1, 0], [x0, y1, 0], [x0, y1, zH], [x1, y1, zH]], col: st.front, vis: player.y > y1 },
-          { pts: [[x0, y1, 0], [x0, y0, 0], [x0, y0, zH], [x0, y1, zH]], col: st.side,  vis: player.x < x0 },
-          { pts: [[x1, y0, 0], [x1, y1, 0], [x1, y1, zH], [x1, y0, zH]], col: st.side,  vis: player.x > x1 },
-        ];
-        for (const f of faces) if (f.vis) drawQuad3D(f.pts, f.col, st.edge);
-        if (zH < eyeZ) {
-          drawQuad3D([[x0, y0, zH], [x1, y0, zH], [x1, y1, zH], [x0, y1, zH]], st.top, st.edge);
-        }
+      for(const p of HOUSE_PROPS.filter(p=>p.type==='rug')) {
+        const flat=(inset,z,col)=>drawQuad3D([[p.x+inset,p.y+inset,z],[p.x+p.w-inset,p.y+inset,z],
+          [p.x+p.w-inset,p.y+p.h-inset,z],[p.x+inset,p.y+p.h-inset,z]],col);
+        flat(0,.035,'#252334');
+        flat(3,.050,p.color);
+        flat(8,.053,'#927d72');
+        flat(10,.056,p.color);
       }
+
+      // Use the same detailed PBR-style art the player sees in top-down.
+      // Anchor the alpha sprite to the prop's front feet, clip it against real
+      // walls, and keep a physical rear model when viewed from behind.
+      const artworkProps = SOLID_PROPS.filter(p => p.art && spriteReady(p.art) &&
+        (p.flip ? player.y < p.y+p.h*.65 : player.y > p.y+p.h*.35));
+      const artworkSet = new Set(artworkProps);
+      const faces=[];
+      function face(pts, col) {
+        const ds=pts.map(([x,y])=>(x-player.x)*cosA+(y-player.y)*sinA);
+        if(Math.max(...ds)<12 || Math.min(...ds)>1150) return;
+        faces.push({pts,col,d:ds.reduce((sum,d)=>sum+d,0)/ds.length});
+      }
+      for(const {owner,x0,x1,y0,y1,lo,hi,top,front,side} of FIXTURE_MODELS) {
+        if (artworkSet.has(owner)) continue;
+        if(player.y<y0) face([[x0,y0,lo],[x1,y0,lo],[x1,y0,hi],[x0,y0,hi]],front);
+        if(player.y>y1) face([[x1,y1,lo],[x0,y1,lo],[x0,y1,hi],[x1,y1,hi]],front);
+        if(player.x<x0) face([[x0,y1,lo],[x0,y0,lo],[x0,y0,hi],[x0,y1,hi]],side);
+        if(player.x>x1) face([[x1,y0,lo],[x1,y1,lo],[x1,y1,hi],[x1,y0,hi]],side);
+        if(eyeZ>hi) face([[x0,y0,hi],[x1,y0,hi],[x1,y1,hi],[x0,y1,hi]],top);
+      }
+      faces.sort((a,b)=>b.d-a.d).forEach(f=>drawQuad3D(f.pts,f.col));
 
       // 3) Collect All 3D Billboards (Characters, Clients, Bad Guys, Hazards, OSHA, PPE, Tools, Dumpster!)
-      const sprites = [];
+      const sprites = artworkProps.map(p => ({
+        x:p.x+p.w/2, y:p.y+p.h*(p.flip ? .17 : .86), type:'fixture', item:p,
+      }));
       for (const p of ppeItems) if (!p.taken) sprites.push({ x: p.x, y: p.y, type: 'ppe', item: p });
       for (const t of toolItems) if (!t.taken) sprites.push({ x: t.x, y: t.y, type: 'tool', item: t });
       sprites.push({ x: DUMPSTER.x, y: DUMPSTER.y, type: 'dumpster', item: DUMPSTER });
@@ -2695,7 +2918,7 @@
         if (fwd < 18 || fwd > 1250) continue;
         const side = -vx * sinA + vy * cosA;
         const screenX = (VW / 2) + (side / fwd) * projPlane;
-        const overflow = s.type === 'prop' ? (s.item.fpW * projPlane / fwd) * 0.5 : 180;
+        const overflow = s.type === 'fixture' ? s.item.w * projPlane / fwd * .55 : 180;
         if (screenX < -overflow || screenX > VW + overflow) continue;
         visibleSprites.push({ ...s, dist: fwd, screenX });
       }
@@ -2706,12 +2929,11 @@
       for (const s of visibleSprites) {
         const isBigChar = (s.type === 'client' || (s.type === 'enemy' && !s.item.isRaccoon && !s.item.isRoomba && !s.item.isRoach && !s.item.isCat));
         const isSmallCritter = (s.type === 'enemy' && (s.item.isRaccoon || s.item.isRoomba || s.item.isRoach || s.item.isCat));
-        const baseFactor = s.type === 'prop' ? 1 : isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
+        const baseFactor = s.type === 'fixture' ? 1 : isBigChar ? 0.92 : (s.type === 'dumpster' ? 0.95 : (isSmallCritter ? 0.68 : 0.72));
         // Foreground limits preserve the room's scale when Hank walks right up to a billboard.
-        const limit = s.type === 'prop' ? (VH * 0.56 / s.item.fpH)
-          : s.type === 'hazard' ? (VH * 0.28 / 48) : 5.8;
-        const scale = Math.min(5.8, limit, (baseFactor * projPlane) / s.dist);
-        const halfW = Math.max(24, (s.type === 'prop' ? s.item.fpW / 2 : (s.type === 'hazard' ? 52 : 36)) * scale);
+        const limit = s.type === 'hazard' ? (VH * 0.28 / 48) : 5.8;
+        const scale = s.type === 'fixture' ? projPlane/s.dist : Math.min(5.8, limit, (baseFactor * projPlane) / s.dist);
+        const halfW = Math.max(24, (s.type === 'fixture' ? s.item.w*.53 : s.type === 'hazard' ? 52 : 36) * scale);
         const startCol = Math.max(0, Math.floor((s.screenX - halfW) / stripW));
         const endCol = Math.min(numRays - 1, Math.ceil((s.screenX + halfW) / stripW));
 
@@ -2725,15 +2947,44 @@
         }
         if (!visibleRuns.length) continue;
 
-        const floorY = horizon + (FP_WALL_HEIGHT * 0.48 * projPlane) / s.dist;
+        const floorY = horizon + eyeZ * projPlane / s.dist;
         ctx.save();
         ctx.beginPath();
-        for (const [x, w] of visibleRuns) ctx.rect(x, 0, w, VH);
+        let appears = false;
+        const spriteTop = floorY - scale * (isBigChar ? 74 : 48), spriteBottom = floorY + 5 * scale;
+        const overlapsSprite = (a,b)=>a < spriteBottom && b > spriteTop;
+        for (const [x, w] of visibleRuns) {
+          for (let c=Math.round(x/stripW);c<Math.round((x+w)/stripW);c++) {
+            const occluders=propDepth[c].filter(b=>b.d+1<s.dist).sort((a,b)=>a.lo-b.lo);
+            let from=0;
+            for(const b of occluders) {
+              const lo=Math.min(VH,b.lo), hi=Math.min(VH,b.hi);
+              if(lo>from) {
+                ctx.rect(c*stripW,from,stripW,lo-from);
+                if(overlapsSprite(from,lo)) appears=true;
+              }
+              from=Math.max(from,hi);
+            }
+            if(from<VH) {
+              ctx.rect(c*stripW,from,stripW,VH-from);
+              if(overlapsSprite(from,VH)) appears=true;
+            }
+          }
+        }
         ctx.clip();
+        const labelStart = fpLabels.length;
 
-        if (s.type === 'prop') {
-          const art = spriteReady(s.item.art);
-          if (art) drawPropArt(art, s.screenX, floorY, s.item.fpW * scale, s.item.fpH * scale);
+        if (s.type === 'fixture') {
+          const p=s.item, art=spriteReady(p.art), w=p.w*scale;
+          const worldHeight = {couch:42,chair:44,tv:47,shelf:59,counter:47,bench:44,bed:49,tub:30,vanity:48,boxes:35,bags:31};
+          const h=Math.min(w*art.naturalHeight/art.naturalWidth, (worldHeight[p.type]||42)*scale);
+          // Contact shadow follows the very same feet anchor as the artwork.
+          // A separate projected footprint can visually pull away at an angle.
+          ctx.save();ctx.translate(s.screenX,floorY-h*.045);ctx.scale(w*.48,Math.max(1,h*.065));
+          const sh=ctx.createRadialGradient(0,0,.08,0,0,1);
+          sh.addColorStop(0,'rgba(8,10,14,.44)');sh.addColorStop(.75,'rgba(8,10,14,.23)');sh.addColorStop(1,'rgba(8,10,14,0)');
+          ctx.fillStyle=sh;ctx.fillRect(-1,-1,2,2);ctx.restore();
+          ctx.drawImage(art,s.screenX-w/2,floorY-h,w,h);
         } else if (s.type === 'client') {
           const c = s.item;
           ctx.save();
@@ -2857,6 +3108,7 @@
             prog: h.progress > 0 ? h.progress / h.hp : 0, progCol: '#22c55e'
           });
         }
+        if(!appears) fpLabels.length=labelStart;
         ctx.restore();
       }
 
@@ -2906,13 +3158,14 @@
 
     function drawFPHands() {
       ctx.save();
-      // Subtle P100 safety goggles frame when wearing mask
+      // Very bottom edge of Hank’s respirator from inside the mask. His HUD
+      // portrait simultaneously shows the actual mask over his muzzle.
       if (player.mask) {
-        const gGrad = ctx.createRadialGradient(VW / 2, VH / 2, Math.min(VW, VH) * 0.38, VW / 2, VH / 2, Math.max(VW, VH) * 0.65);
-        gGrad.addColorStop(0, 'rgba(0, 240, 255, 0)');
-        gGrad.addColorStop(1, 'rgba(0, 180, 220, 0.24)');
-        ctx.fillStyle = gGrad;
-        ctx.fillRect(0, 0, VW, VH);
+        const edge=ctx.createLinearGradient(0,VH*.93,0,VH);
+        edge.addColorStop(0,'rgba(30,41,59,.04)');
+        edge.addColorStop(1,'rgba(15,23,42,.84)');
+        ctx.beginPath();ctx.moveTo(VW*.32,VH);ctx.quadraticCurveTo(VW*.50,VH*.87,VW*.68,VH);
+        ctx.fillStyle=edge;ctx.fill();
       }
 
       // Center arcade crosshair
@@ -2939,6 +3192,12 @@
         const x = VW + (toolShown ? 22 : 9) - w + bobX;
         const y = VH - h + bobY + 5;
         ctx.drawImage(hand, x, y, w, h);
+        if(player.suit) {
+          const cuff=ctx.createLinearGradient(x+w*.6,y+h*.65,x+w,y+h);
+          cuff.addColorStop(0,'#eff5f8');cuff.addColorStop(1,'#91a6b8');
+          ctx.beginPath();ctx.moveTo(x+w*.62,y+h*.85);ctx.quadraticCurveTo(x+w*.69,y+h*.75,x+w*.84,y+h*.71);
+          ctx.lineTo(x+w,y+h*.80);ctx.lineTo(x+w,y+h);ctx.lineTo(x+w*.74,y+h);ctx.closePath();ctx.fillStyle=cuff;ctx.fill();
+        }
         if (player.scrubbing && player.activeTool === 'sprayer') {
           const hx = x + w * 0.22, hy = y + h * 0.28;
           ctx.save();
@@ -2966,6 +3225,7 @@
       const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
       lastTs = ts;
       update(dt);
+      syncHankPortrait();
       if (viewMode === 'fp') drawFirstPerson(); else drawWorld();
       drawMinimap();
       requestAnimationFrame(loop);
