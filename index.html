@@ -118,9 +118,15 @@
     }
     .overlay.hidden { display: none; }
     .overlay h1 {
-      font-size: clamp(26px, 3.8vw, 40px); font-weight: 900; letter-spacing: -0.02em;
+      font-size: clamp(24px, 3.6vw, 38px); font-weight: 900; letter-spacing: -0.02em;
       color: #ffffff;
-      text-shadow: 0 3px 16px rgba(56, 189, 248, 0.55), 0 2px 4px rgba(0, 0, 0, 0.9);
+      padding: 10px 26px; border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(56, 189, 248, 0.14));
+      border: 1.5px solid rgba(255, 255, 255, 0.32);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      text-shadow: 0 2px 14px rgba(56, 189, 248, 0.7), 0 2px 4px rgba(0, 0, 0, 0.85);
     }
     .overlay p { max-width: 580px; color: #cbd5e1; font-size: 14px; line-height: 1.55; }
     .btn {
@@ -602,28 +608,40 @@
     ];
 
     const HOUSE_PROPS = [
-      // Living room couch, rug, TV
-      { type: 'rug', x: 170, y: 240, w: 280, h: 170, color: '#6b2c2c' },
-      { type: 'couch', x: 205, y: 149, w: 190, h: 50, art: 'sofaArt', size: 154, fpW: 82, fpH: 48, solid: true },
-      { type: 'tv', x: 220, y: 540, w: 146, h: 43, art: 'tvArt', size: 92, fpW: 54, fpH: 53, solid: true },
-      { type: 'chair', x: 472, y: 132, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 46, fpH: 51 },
-      { type: 'shelf', x: 514, y: 541, w: 94, h: 53, art: 'shelfArt', size: 62, fpW: 48, fpH: 65 },
-      // Kitchen island & fridge
-      { type: 'counter', x: 820, y: 100, w: 290, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37 },
-      { type: 'island', x: 860, y: 310, w: 200, h: 86, art: 'islandArt', size: 137, fpW: 66, fpH: 36 },
-      // Garage workbench & shelving
-      { type: 'counter', x: 1460, y: 95, w: 280, h: 55, art: 'benchArt', size: 154, fpW: 90, fpH: 37 },
-      { type: 'boxes', x: 1710, y: 420, w: 110, h: 120, art: 'shelfArt', size: 75, fpW: 52, fpH: 67 },
-      // Bedroom bed & rug
-      { type: 'rug', x: 150, y: 820, w: 300, h: 200, color: '#2b3e63' },
-      { type: 'bed', x: 105, y: 980, w: 190, h: 155, art: 'bedArt', size: 134, fpW: 69, fpH: 40 },
-      // Bathroom tub & vanity
-      { type: 'tub', x: 1050, y: 740, w: 165, h: 85, art: 'cleanTubArt', size: 111, fpW: 67, fpH: 31 },
-      { type: 'counter', x: 740, y: 1130, w: 210, h: 54, art: 'vanityArt', size: 113, fpW: 58, fpH: 38 },
-      // Basement crates
-      { type: 'boxes', x: 1410, y: 740, w: 120, h: 100, art: 'clutterArt', size: 81, fpW: 55, fpH: 37 },
-      { type: 'boxes', x: 1680, y: 1060, w: 130, h: 110, art: 'bagsArt', size: 88, fpW: 59, fpH: 40 },
+      // Living room — furniture placed flush against walls, clear of doorways
+      { type: 'rug', x: 170, y: 205, w: 260, h: 170, color: '#6b2c2c' },
+      { type: 'couch', x: 205, y: 48, w: 190, h: 54, art: 'sofaArt', size: 154, fpW: 82, fpH: 48, solid: true },
+      { type: 'chair', x: 548, y: 54, w: 68, h: 54, art: 'chairArt', size: 57, fpW: 46, fpH: 51, solid: true },
+      { type: 'tv', x: 82, y: 592, w: 146, h: 44, art: 'tvArt', size: 92, fpW: 54, fpH: 53, solid: true },
+      { type: 'shelf', x: 472, y: 584, w: 94, h: 52, art: 'shelfArt', size: 62, fpW: 48, fpH: 65, solid: true },
+      // Kitchen — counter & sink flush against north wall, side prep counter against east wall
+      { type: 'counter', x: 740, y: 48, w: 290, h: 58, art: 'counterArt', size: 170, fpW: 104, fpH: 37, solid: true },
+      { type: 'island', x: 1170, y: 430, w: 104, h: 86, art: 'islandArt', size: 112, fpW: 60, fpH: 36, solid: true },
+      // Garage — workbench flush against north wall, storage shelf flush against east wall
+      { type: 'counter', x: 1340, y: 48, w: 260, h: 55, art: 'benchArt', size: 154, fpW: 90, fpH: 37, solid: true },
+      { type: 'boxes', x: 1768, y: 420, w: 108, h: 110, art: 'shelfArt', size: 75, fpW: 52, fpH: 67, solid: true },
+      // Bedroom — bed tucked flush in south-west corner with rug beside it
+      { type: 'rug', x: 245, y: 845, w: 240, h: 175, color: '#2b3e63' },
+      { type: 'bed', x: 44, y: 1078, w: 190, h: 155, art: 'bedArt', size: 134, fpW: 69, fpH: 40, solid: true },
+      // Bathroom — tub flush in north-east corner, sink vanity flush against south wall
+      { type: 'tub', x: 1110, y: 670, w: 165, h: 85, art: 'cleanTubArt', size: 111, fpW: 67, fpH: 31, solid: true },
+      { type: 'counter', x: 740, y: 1182, w: 210, h: 54, art: 'vanityArt', size: 113, fpW: 58, fpH: 38, solid: true },
+      // Basement — clutter & bags stacked flush in corners
+      { type: 'boxes', x: 1312, y: 670, w: 120, h: 96, art: 'clutterArt', size: 81, fpW: 55, fpH: 37, solid: true },
+      { type: 'boxes', x: 1744, y: 1126, w: 130, h: 108, art: 'bagsArt', size: 88, fpW: 59, fpH: 40, solid: true },
     ];
+
+    const BUMP_QUIPS = {
+      couch:   ['🐮 Wonder what lives between those cushions...', '🐮 Found 37¢ and a fossilized Cheeto!'],
+      tv:      ['🐮 Still tuned to 1998 infomercials...', '🐮 Something is definitely nesting behind this TV!'],
+      chair:   ['🐮 That recliner has seen some things...', '🐮 Do NOT sit in that without double Tyvek!'],
+      shelf:   ['🐮 One bump away from a 1994 magazine avalanche!', '🐮 Wonder what lives up there...'],
+      counter: ['🐮 Pretty sure something in that cabinet just knocked back!', '🐮 My ATP meter screamed just walking past this!'],
+      island:  ['🐮 Wonder what lives in that cabinet...', '🐮 Sticky... why is it ALWAYS sticky?!'],
+      bed:     ['🐮 Nope. Not checking under that bed without backup.', '🐮 Wonder what lives under there...'],
+      tub:     ['🐮 Pretty sure that tub has its own ecosystem now.', '🐮 Even the drain is asking for help!'],
+      boxes:   ['🐮 Wonder what lives in there... hopefully not another Dave!', '🐮 Shhh... I think that box is breathing.'],
+    };
 
     const SOLID_PROPS = HOUSE_PROPS.filter((p) => p.solid);
 
@@ -1086,6 +1104,16 @@
       return false;
     }
 
+    function getBumpedProp(nx, ny, r) {
+      for (const p of SOLID_PROPS) {
+        const cx = Math.max(p.x, Math.min(nx, p.x + p.w));
+        const cy = Math.max(p.y, Math.min(ny, p.y + p.h));
+        if (Math.hypot(nx - cx, ny - cy) < r + 2) return p;
+      }
+      return null;
+    }
+    let bumpQuipCooldown = 0;
+
     function showWin() {
       running = false;
       resetGameInput();
@@ -1117,6 +1145,7 @@
       if (scrubSoundCooldown > 0) scrubSoundCooldown -= dt;
       if (talkCooldown > 0) talkCooldown -= dt;
       if (toolWarnCooldown > 0) toolWarnCooldown -= dt;
+      if (bumpQuipCooldown > 0) bumpQuipCooldown -= dt;
 
       let dx = 0, dy = 0;
       if (viewMode === 'fp') {
@@ -1153,8 +1182,18 @@
         const speed = (sprinting ? 310 : 230) * (player.carryingTrash ? 0.86 : 1);
         const nx = player.x + dx * speed * dt;
         const ny = player.y + dy * speed * dt;
-        if (!collidesWall(nx, player.y, player.r)) player.x = nx;
-        if (!collidesWall(player.x, ny, player.r)) player.y = ny;
+        const hitX = collidesWall(nx, player.y, player.r);
+        const hitY = collidesWall(player.x, ny, player.r);
+        if (!hitX) player.x = nx;
+        if (!hitY) player.y = ny;
+        if ((hitX || hitY) && bumpQuipCooldown <= 0) {
+          const prop = getBumpedProp(nx, ny, player.r);
+          if (prop) {
+            bumpQuipCooldown = 2.8;
+            const list = BUMP_QUIPS[prop.type] || ['🐮 Wonder what lives in there...'];
+            addFloater(player.x, player.y - 38, list[Math.floor(Math.random() * list.length)], '#fde68a');
+          }
+        }
         player.stepPhase += dt * 14;
       }
 
