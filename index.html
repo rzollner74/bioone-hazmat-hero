@@ -2077,9 +2077,13 @@
         ctx.save();
         const art = p.art && spriteReady(p.art);
         if (art) {
-          const x = p.x + p.w / 2, y = p.y + p.h;
+          let x = p.x + p.w / 2, y = p.y + p.h;
+          const [dw, dh] = artDimensions(art, p.size, 106);
           const room = HOUSE_ROOMS.find((r) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
           if (room) {
+            // Keep furniture cleanly tucked inside the room walls — never sliced by north/side walls!
+            x = Math.max(room.x + dw / 2 + 4, Math.min(room.x + room.w - dw / 2 - 4, x));
+            y = Math.max(room.y + dh + 4, Math.min(room.y + room.h - 4, y));
             ctx.beginPath(); ctx.rect(room.x, room.y, room.w, room.h); ctx.clip();
           }
           drawPropArt(art, x, y, p.size, 106);
